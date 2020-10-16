@@ -21,6 +21,9 @@ class FaceScrub(Dataset):
         data = input['images']
         labels = input['labels']
 
+        if data.max() > 1:
+            data = data/255.0
+
 
         v_min = data.min(axis=0)
         v_max = data.max(axis=0)
