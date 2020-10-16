@@ -98,6 +98,7 @@ def main():
                 'best_cl_acc': best_cl_acc,
             }
             torch.save(state, 'out/classifier.pth')
+            torch.save(classifier.state_dict(), 'out/model_dict.pth')
 
     print("Best classifier: epoch {}, acc {:.4f}".format(best_cl_epoch, best_cl_acc))
 
