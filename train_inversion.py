@@ -86,7 +86,7 @@ def main():
     torch.manual_seed(args.seed)
 
     transform = transforms.Compose([transforms.ToTensor()])
-    train_set = CelebA('./celaba_5w_255.npy', transform=transform)
+    train_set = CelebA('./celeba_5w_255.npy', transform=transform)
     # Inversion attack on TRAIN data of facescrub classifier
     test1_set = FaceScrub('./facescrub.npz', transform=transform, train=True)
     # Inversion attack on TEST data of facescrub classifier
