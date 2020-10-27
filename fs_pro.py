@@ -82,7 +82,7 @@ def celeb(path):
 
 	print(images.shape)
 	#print(images.max())
-	np.save("celaba_5w_255.npy", images)
+	np.save("celeba_5w_255.npy", images)
 
 
 
