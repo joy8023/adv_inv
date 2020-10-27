@@ -9,7 +9,8 @@ import cv2
 #	└──names
 #		└──images.jpeg
 
-def getIMG(path):
+#generate Facesrcub dataset
+def face(path):
 
 	if not os.path.exists(path):
 		print("no such directory")
@@ -31,8 +32,10 @@ def getIMG(path):
 					if os.path.splitext(item)[1] == '.jpeg':
 						img = cv2.imread(os.path.join(actor,item), cv2.IMREAD_GRAYSCALE)
 						img = cv2.resize(img,(64,64))
+						print(img)
 						images.append(img)
 						labels.append(C)
+						return
 
 				names.append(actor.name)
 				C += 1
@@ -42,6 +45,7 @@ def getIMG(path):
 		images = np.array(images)
 		labels = np.array(labels)
 		print(images.shape)
+
 		print(labels.shape)
 		print(labels)
 		print(len(names))
@@ -50,11 +54,52 @@ def getIMG(path):
 
 		np.savez("facescrub.npz", images = images, labels = labels, names = names)
 
-getIMG("./faces")
 
-#input = np.load("./facescrub.npz")
+#generate CelebA dataset
+def celeb(path):
+
+	if not os.path.exists(path):
+		print("no such directory")
+		return
+
+	images = []
+	C = 0
+
+	with os.scandir(path) as files:
+		
+		for file in files:
+			if os.path.splitext(file)[1] == '.jpg' and C < 50000:
+				img = cv2.imread(os.path.join(file), cv2.IMREAD_GRAYSCALE)
+				#print(img.shape)
+				img = cv2.resize(img[70:178,35:143],(64,64))
+				#cv2.imshow("img",img)
+				#cv2.waitKey(0)
+				images.append(img)
+				C += 1
+	
+	images = np.array(images)
+	#images = images / 255.0
+
+	print(images.shape)
+	#print(images.max())
+	np.save("celaba_5w_255.npy", images)
+
+
+
+
+
+
+celeb("./celeba")
+#face("./faces")
+
+'''
+input = np.load("./facescrub.npz")
 #print(input)
-#data = input['images']
+data = input['images']
+print(data.max())
+data= data/255.0
+print(data[0])
+'''
 #labels = input['labels']
 #names = input['names']
 #print(labels)

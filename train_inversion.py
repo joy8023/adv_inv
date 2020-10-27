@@ -86,11 +86,11 @@ def main():
     torch.manual_seed(args.seed)
 
     transform = transforms.Compose([transforms.ToTensor()])
-    train_set = CelebA('./data/celebA', transform=transform)
+    train_set = CelebA('./celaba_5w_255.npy', transform=transform)
     # Inversion attack on TRAIN data of facescrub classifier
-    test1_set = FaceScrub('./data/facescrub', transform=transform, train=True)
+    test1_set = FaceScrub('./facescrub.npz', transform=transform, train=True)
     # Inversion attack on TEST data of facescrub classifier
-    test2_set = FaceScrub('./data/facescrub', transform=transform, train=False)
+    test2_set = FaceScrub('./facescrub.npz', transform=transform, train=False)
 
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True, **kwargs)
     test1_loader = torch.utils.data.DataLoader(test1_set, batch_size=args.test_batch_size, shuffle=False, **kwargs)
@@ -101,16 +101,23 @@ def main():
     optimizer = optim.Adam(inversion.parameters(), lr=0.0002, betas=(0.5, 0.999), amsgrad=True)
 
     # Load classifier
-    path = 'out/classifier.pth'
+    #path = 'out/classifier.pth'
+    path = 'out/model_dict.pth'
+    #checkpoint = torch.load(path)
     try:
         checkpoint = torch.load(path)
+        print(checkpoint)
+        '''
         classifier.load_state_dict(checkpoint['model'])
         epoch = checkpoint['epoch']
         best_cl_acc = checkpoint['best_cl_acc']
         print("=> loaded classifier checkpoint '{}' (epoch {}, acc {:.4f})".format(path, epoch, best_cl_acc))
+        '''
+        classifier.load_state_dict(checkpoint)
     except:
         print("=> load classifier checkpoint '{}' failed".format(path))
         return
+
 
     # Train inversion model
     best_recon_loss = 999
@@ -128,6 +135,7 @@ def main():
                 'best_recon_loss': best_recon_loss
             }
             torch.save(state, 'out/inversion.pth')
+            torch.save(classifier.state_dict(), 'out/inv_model_dict.pth')
             shutil.copyfile('out/recon_test1_{}.png'.format(epoch), 'out/best_test1.png')
             shutil.copyfile('out/recon_test2_{}.png'.format(epoch), 'out/best_test2.png')
 

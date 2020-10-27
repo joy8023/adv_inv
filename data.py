@@ -18,17 +18,14 @@ class FaceScrub(Dataset):
 
         #data = np.concatenate([actor_images, actress_images], axis=0)
         #labels = np.concatenate([actor_labels, actress_labels], axis=0)
-        data = input['images']
+        data = input['images']/255.0
         labels = input['labels']
 
-        if data.max() > 1:
-            data = data/255.0
-
-
+        '''
         v_min = data.min(axis=0)
         v_max = data.max(axis=0)
         data = (data - v_min) / (v_max - v_min)
-
+        '''
         np.random.seed(666)
         perm = np.arange(len(data))
         np.random.shuffle(perm)
@@ -63,6 +60,10 @@ class CelebA(Dataset):
         self.transform = transform
         self.target_transform = target_transform
 
+        input = np.load(self.root)
+        data = input/255.0
+
+        '''
         data = []
         for i in range(10):
             data.append(np.load(os.path.join(self.root, 'celebA_64_{}.npy').format(i + 1)))
@@ -71,11 +72,12 @@ class CelebA(Dataset):
         v_min = data.min(axis=0)
         v_max = data.max(axis=0)
         data = (data - v_min) / (v_max - v_min)
-        labels = np.array([0] * len(data))
-
+        '''
+        labels = np.array([0] * data.shape[0])
+        
         self.data = data
         self.labels = labels
-
+    
     def __len__(self):
         return len(self.data)
 
