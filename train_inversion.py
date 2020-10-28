@@ -50,7 +50,7 @@ def test(classifier, inversion, device, data_loader, epoch, msg):
     classifier.eval()
     inversion.eval()
     mse_loss = 0
-    plot = False
+    plot = True
     with torch.no_grad():
         for data, target in data_loader:
             data, target = data.to(device), target.to(device)
@@ -138,7 +138,7 @@ def main():
             torch.save(state, 'out/inversion.pth')
             torch.save(classifier.state_dict(), 'out/inv_model_dict.pth')
             shutil.copyfile('out/recon_test1_{}.png'.format(epoch), 'out/best_test1.png')
-            shutil.copyfile('out/recon_test2_{}.png'.format(epoch), 'out/best_test2.png')
+            #shutil.copyfile('out/recon_test2_{}.png'.format(epoch), 'out/best_test2.png')
 
 if __name__ == '__main__':
     main()
