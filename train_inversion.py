@@ -50,10 +50,11 @@ def test(classifier, inversion, device, data_loader, epoch, msg):
     classifier.eval()
     inversion.eval()
     mse_loss = 0
-    plot = True
+    plot = False
     with torch.no_grad():
         for data, target in data_loader:
             data, target = data.to(device), target.to(device)
+
             prediction = classifier(data, release=True)
             reconstruction = inversion(prediction)
             mse_loss += F.mse_loss(reconstruction, data, reduction='sum').item()
@@ -88,13 +89,13 @@ def main():
     transform = transforms.Compose([transforms.ToTensor()])
     train_set = CelebA('./celeba_5w_255.npy', transform=transform)
     # Inversion attack on TRAIN data of facescrub classifier
-    test1_set = FaceScrub('./facescrub.npz', transform=transform, train=True)
+    test1_set = FaceScrub('./facescrub.npz', transform=transform, train=False)
     # Inversion attack on TEST data of facescrub classifier
-    test2_set = FaceScrub('./facescrub.npz', transform=transform, train=False)
+    #test2_set = FaceScrub('./facescrub.npz', transform=transform, train=False)
 
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True, **kwargs)
     test1_loader = torch.utils.data.DataLoader(test1_set, batch_size=args.test_batch_size, shuffle=False, **kwargs)
-    test2_loader = torch.utils.data.DataLoader(test2_set, batch_size=args.test_batch_size, shuffle=False, **kwargs)
+    #test2_loader = torch.utils.data.DataLoader(test2_set, batch_size=args.test_batch_size, shuffle=False, **kwargs)
 
     classifier = nn.DataParallel(Classifier(nc=args.nc, ndf=args.ndf, nz=args.nz)).to(device)
     inversion = nn.DataParallel(Inversion(nc=args.nc, ngf=args.ngf, nz=args.nz, truncation=args.truncation, c=args.c)).to(device)
@@ -124,7 +125,7 @@ def main():
     for epoch in range(1, args.epochs + 1):
         train(classifier, inversion, args.log_interval, device, train_loader, optimizer, epoch)
         recon_loss = test(classifier, inversion, device, test1_loader, epoch, 'test1')
-        test(classifier, inversion, device, test2_loader, epoch, 'test2')
+        #test(classifier, inversion, device, test2_loader, epoch, 'test2')
 
         if recon_loss < best_recon_loss:
             best_recon_loss = recon_loss
