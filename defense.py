@@ -21,7 +21,7 @@ parser.add_argument('--truncation', type=int, default=530)
 parser.add_argument('--c', type=float, default=50.)
 parser.add_argument('--num_workers', type=int, default=1, metavar='')
 parser.add_argument('--no-cuda', action='store_true', default=False)
-
+parser.add_argument('--seed', type=int, default=1, metavar='')
 
 def predict(classifier, device, data_loader):
 
