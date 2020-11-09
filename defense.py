@@ -33,14 +33,36 @@ def predict(classifier, device, data_loader):
 
     return output
 
-def defense(classifier, device, data_loader):
+def perturb(input, epsilon, grad):
+
+	sign = grad.sign()
+	output = input + epsilon * sign
+	print(input[0])
+	print(output[0])
+
+	return output
+
+def defense(classifier, inversion, device, data_loader):
 
 	classifier.eval()
+	inversion.eval()
+	epsilon = 0.1
 
-	with torch.no_grad:
-		for data, target in data_loader:
-			data, target = data.to(device), target.to(device)
-            output = classifier(data)
+	for batch_idx, (data, target) in enumerate(data_loader):
+		data, target = data.to(device), target.to(device)
+		with torch.no_grad:
+            prediction = classifier(data, release = True)
+        
+        prediction.requires_grad = True
+        reconstruction = inversion(prediction)
+        loss =F.mse_loss(reconstruction, target)
+        inversion.zere_grad()
+        loss.backward()
+        prediction_grad = prediction.grad.data
+        pert_pred = perturb(prediction, epsilon,prediction_grad)
+
+        return
+
 
 def inv_test(classifier, inversion, device, data_loader, epoch, msg):
 
@@ -48,7 +70,7 @@ def inv_test(classifier, inversion, device, data_loader, epoch, msg):
     inversion.eval()
     mse_loss = 0
     plot = True
-    
+
     with torch.no_grad():
         for data, target in data_loader:
             data, target = data.to(device), target.to(device)
@@ -117,6 +139,9 @@ def main():
     except:
     	print("=> load classifier checkpoint '{}' failed".format(inversion_path))
         return
+
+
+    defense(classifier, inversion, device, celeb_loader)
 
 
 
