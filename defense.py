@@ -51,8 +51,8 @@ def defense(classifier, inversion, device, data_loader):
 
 	for batch_idx, (data, target) in enumerate(data_loader):
 		data, target = data.to(device), target.to(device)
-		with torch.no_grad:
-			prediction = classifier(data, release = True)
+		#with torch.no_grad:
+		prediction = classifier(data, release = True)
 		
 		prediction.requires_grad = True
 		reconstruction = inversion(prediction)
