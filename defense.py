@@ -34,11 +34,11 @@ def predict(classifier, device, data_loader):
 
 	return output
 
-def perturb(input, epsilon, grad):
+def perturb(prediction, epsilon, grad):
 
 	sign = grad.sign()
-	output = input + epsilon * sign
-	print(input[0])
+	output = prediction + epsilon * sign
+	print(prediction[0])
 	print(output[0])
 
 	return output
