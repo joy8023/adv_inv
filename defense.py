@@ -54,10 +54,10 @@ def defense(classifier, inversion, device, data_loader):
 		#with torch.no_grad:
 		prediction = classifier(data, release = True)
 		
-		prediction.requires_grad = True
+		print(prediction.requires_grad)# = True
 		reconstruction = inversion(prediction)
 		loss =F.mse_loss(reconstruction, target)
-		inversion.zere_grad()
+		#inversion.zere_grad()
 		loss.backward()
 		prediction_grad = prediction.grad.data
 		pert_pred = perturb(prediction, epsilon,prediction_grad)
