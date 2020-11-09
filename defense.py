@@ -122,11 +122,11 @@ def main():
 	inversion = nn.DataParallel(Inversion(nc=args.nc, ngf=args.ngf, nz=args.nz, truncation=args.truncation, c=args.c)).to(device)
 
 	model_path = 'out/model_dict.pth'
-	inversion_path = 'out/inv_model_dict.pth'
+	inversion_path = 'out/inversion.pth'
 
 	try:
 		model_checkpoint = torch.load(model_path)
-		print(model_checkpoint)
+		#print(model_checkpoint)
 		classifier.load_state_dict(model_checkpoint)
 
 	except:
@@ -135,8 +135,8 @@ def main():
 
 	try:
 		inv_checkpoint = torch.load(inversion_path)
-		print(inv_checkpoint)
-		inversion.load_state_dict(inv_checkpoint)
+		#print(inv_checkpoint)
+		inversion.load_state_dict(inv_checkpoint['model'])
 	except:
 		print("=> load classifier checkpoint '{}' failed".format(inversion_path))
 		return
