@@ -38,8 +38,8 @@ def perturb(prediction, epsilon, grad):
 
 	sign = grad.sign()
 	output = prediction + epsilon * sign
-	print(prediction[0])
-	print(output[0])
+	print(prediction[0].item())
+	print(output[0].item())
 
 	return output
 
@@ -56,10 +56,12 @@ def defense(classifier, inversion, device, data_loader):
 		print('prediction size',prediction.size())
 		reconstruction = inversion(prediction)
 		print('recon size',reconstruction.size())
-		loss =F.mse_loss(reconstruction, target)
+		loss =F.mse_loss(reconstruction, target,reduction='sum')
+		print('loss size',loss.size())
 		#inversion.zere_grad()
 		loss.backward()
 		prediction_grad = prediction.grad.data
+		print('grad size',prediction_grad.size)
 		pert_pred = perturb(prediction, epsilon,prediction_grad)
 
 		return
