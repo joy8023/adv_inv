@@ -38,8 +38,8 @@ def perturb(prediction, epsilon, grad):
 
 	sign = grad.sign()
 	output = prediction + epsilon * sign
-	print(prediction[0].item())
-	print(output[0].item())
+	print(prediction[0].data)
+	print(output[0].data)
 
 	return output
 
@@ -55,25 +55,27 @@ def defense(classifier, inversion, device, data_loader):
 		prediction = classifier(data, release = True)
 		
 		#create new tensor for further perturbation
-		pred = torch.tensor(prediction).to(device).float()
+		pred = torch.tensor(prediction).to(device)
 		pred.requires_grad = True
 		reconstruction = inversion(pred)
 		
 		loss =F.mse_loss(reconstruction, data)
 		loss.backward()
-		#print(pred.grad.data)
+
+		print('grad:',pred.grad.data)
 		pred_grad = pred.grad.data
-		#print('grad size:',pred_grad.size)
+
+		print('grad size:',pred_grad.size)
 		pert_pred = perturb(prediction, epsilon, pred_grad)
 		pert_recon = inversion(pert_pred)
 
-		plot = True
+		plot = False
 		if plot:
 			truth = data[0:32]
 			inverse = reconstruction[0:32]
 			defense = pert_recon[0:32]
-			out = torch.cat(truth, inverse)
-			out = torch.cat(out, defense)
+			out = torch.cat((truth, inverse))
+			out = torch.cat((out, defense))
 			for i in range(4):
 					out[i * 24 :i * 24 + 8] = truth[i * 8:i * 8 + 8]
 					out[i * 24 + 8:i * 24 + 16] = inverse[i * 8:i * 8 + 8]
