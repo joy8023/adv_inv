@@ -141,15 +141,7 @@ def main():
 		print("=> load classifier checkpoint '{}' failed".format(inversion_path))
 		return
 
-
 	defense(classifier, inversion, device, celeb_loader)
-
-
-
-
-
-
-
 
 
 if __name__ == '__main__':
