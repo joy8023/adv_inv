@@ -46,7 +46,7 @@ def perturb(prediction, epsilon, grad):
 def defense(classifier, inversion, device, data_loader):
 
 	classifier.eval()
-	inversion.train()
+	inversion.eval()
 	epsilon = 0.1
 
 	for batch_idx, (data, target) in enumerate(data_loader):
@@ -54,15 +54,19 @@ def defense(classifier, inversion, device, data_loader):
 		#print('data_size',data.size())
 		prediction = classifier(data, release = True)
 		#print('prediction size',prediction.size())
-		reconstruction = inversion(prediction)
+		pred = torch.tensor(prediction).to(device).float()
+		pred.requires_grad = True
+
+		reconstruction = inversion(pred)
 		#print('recon size',reconstruction.size())
 		loss =F.mse_loss(reconstruction, data)
 		print('loss size',loss.size())
 		#inversion.zere_grad()
 		loss.backward()
-		prediction_grad = prediction.grad.data
-		print('grad size:',prediction_grad.size)
-		pert_pred = perturb(prediction, epsilon,prediction_grad)
+		print(pred.grad.data)
+		#prediction_grad = prediction.grad.data
+		#print('grad size:',prediction_grad.size)
+		#pert_pred = perturb(prediction, epsilon,prediction_grad)
 
 		return
 
