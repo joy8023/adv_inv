@@ -51,11 +51,11 @@ def defense(classifier, inversion, device, data_loader):
 
 	for batch_idx, (data, target) in enumerate(data_loader):
 		data, target = data.to(device), target.to(device)
-		#with torch.no_grad:
+		print('data_size',data.size())
 		prediction = classifier(data, release = True)
-		
-		print(prediction.requires_grad)# = True
+		print('prediction size',prediction.size())
 		reconstruction = inversion(prediction)
+		print('recon size',reconstruction.size())
 		loss =F.mse_loss(reconstruction, target)
 		#inversion.zere_grad()
 		loss.backward()
