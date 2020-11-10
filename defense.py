@@ -50,28 +50,42 @@ def defense(classifier, inversion, device, data_loader):
 	epsilon = 0.1
 
 	for batch_idx, (data, target) in enumerate(data_loader):
+
 		data, target = data.to(device), target.to(device)
-		#print('data_size',data.size())
 		prediction = classifier(data, release = True)
-		#print('prediction size',prediction.size())
+		
+		#create new tensor for further perturbation
 		pred = torch.tensor(prediction).to(device).float()
 		pred.requires_grad = True
-
 		reconstruction = inversion(pred)
-		#print('recon size',reconstruction.size())
+		
 		loss =F.mse_loss(reconstruction, data)
-		print('loss size',loss.size())
-		#inversion.zere_grad()
 		loss.backward()
-		print(pred.grad.data)
-		#prediction_grad = prediction.grad.data
-		#print('grad size:',prediction_grad.size)
-		#pert_pred = perturb(prediction, epsilon,prediction_grad)
+		#print(pred.grad.data)
+		pred_grad = pred.grad.data
+		#print('grad size:',pred_grad.size)
+		pert_pred = perturb(prediction, epsilon, pred_grad)
+		pert_recon = inversion(pert_pred)
+
+		plot = True
+		if plot:
+			truth = data[0:32]
+			inverse = reconstruction[0:32]
+			defense = pert_recon[0:32]
+			out = torch.cat(truth, inverse)
+			out = torch.cat(out, defense)
+			for i in range(4):
+					out[i * 24 :i * 24 + 8] = truth[i * 8:i * 8 + 8]
+					out[i * 24 + 8:i * 24 + 16] = inverse[i * 8:i * 8 + 8]
+					out[i * 24 + 16:i * 24 + 24] = defense[i * 8:i * 8 + 8]
+			vutils.save_image(out, 'out1/test.png', normalize=False)
+			plot = False
+
 
 		return
 
 
-def inv_test(classifier, inversion, device, data_loader, epoch, msg):
+def inv_test(classifier, inversion, device, data_loader, epoch, msg = 'test'):
 
 	classifier.eval()
 	inversion.eval()
