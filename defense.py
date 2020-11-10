@@ -51,18 +51,18 @@ def defense(classifier, inversion, device, data_loader):
 
 	for batch_idx, (data, target) in enumerate(data_loader):
 		data, target = data.to(device), target.to(device)
-		print('data_size',data.size())
+		#print('data_size',data.size())
 		prediction = classifier(data, release = True)
-		print('prediction size',prediction.size())
+		#print('prediction size',prediction.size())
 		reconstruction = inversion(prediction)
-		print('recon size',reconstruction.size())
-		loss =F.mse_loss(reconstruction, target)
+		#print('recon size',reconstruction.size())
+		loss =F.mse_loss(reconstruction, data)
 		print('loss size',loss.size())
 		#inversion.zere_grad()
 		loss.backward()
 		prediction_grad = prediction.grad.data
-		print('grad size',prediction_grad.size)
-		#pert_pred = perturb(prediction, epsilon,prediction_grad)
+		print('grad size:',prediction_grad.size)
+		pert_pred = perturb(prediction, epsilon,prediction_grad)
 
 		return
 
