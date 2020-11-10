@@ -46,7 +46,7 @@ def perturb(prediction, epsilon, grad):
 def defense(classifier, inversion, device, data_loader):
 
 	classifier.eval()
-	inversion.eval()
+	inversion.train()
 	epsilon = 0.1
 
 	for batch_idx, (data, target) in enumerate(data_loader):
@@ -56,13 +56,13 @@ def defense(classifier, inversion, device, data_loader):
 		print('prediction size',prediction.size())
 		reconstruction = inversion(prediction)
 		print('recon size',reconstruction.size())
-		loss =F.mse_loss(reconstruction, target,reduction='sum')
+		loss =F.mse_loss(reconstruction, target)
 		print('loss size',loss.size())
 		#inversion.zere_grad()
 		loss.backward()
 		prediction_grad = prediction.grad.data
 		print('grad size',prediction_grad.size)
-		pert_pred = perturb(prediction, epsilon,prediction_grad)
+		#pert_pred = perturb(prediction, epsilon,prediction_grad)
 
 		return
 
