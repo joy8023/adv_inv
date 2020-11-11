@@ -38,8 +38,8 @@ def perturb(prediction, epsilon, grad):
 
 	sign = grad.sign()
 	output = prediction + epsilon * sign
-	#print(prediction[0].data.max())
-	#print(output[0].data)
+	print(prediction[0].data)
+	print(output[0].data)
 
 	return output
 
@@ -65,11 +65,11 @@ def defense(classifier, inversion, device, data_loader, epsilon):
 		print('grad:',pred.grad.data)
 		pred_grad = pred.grad.data
 
-		print('grad size:',pred_grad.size)
+		#print('grad size:',pred_grad.size)
 		pert_pred = perturb(prediction, epsilon, pred_grad)
 		pert_recon = inversion(pert_pred)
 
-		plot = True
+		plot = False
 		if plot:
 			truth = data[0:32]
 			inverse = reconstruction[0:32]
@@ -162,11 +162,14 @@ def main():
 	except:
 		print("=> load classifier checkpoint '{}' failed".format(inversion_path))
 		return
-
+	
 	epsilon = 1e-10
+	'''
 	for i in range(10):
 		defense(classifier, inversion, device, celeb_loader,epsilon)
 		epsilon *= 10
+	'''
+	defense(classifier, inversion, device, celeb_loader,epsilon)
 
 
 if __name__ == '__main__':
