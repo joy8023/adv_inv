@@ -38,8 +38,8 @@ def perturb(prediction, epsilon, grad):
 
 	sign = grad.sign()
 	output = prediction + epsilon * sign
-	print(prediction[0].data)
-	print(output[0].data)
+	#print(prediction[0].data)
+	#print(output[0].data)
 
 	return output
 
@@ -68,6 +68,8 @@ def defense(classifier, inversion, device, data_loader, epsilon):
 		#print('grad size:',pred_grad.size)
 		pert_pred = perturb(prediction, epsilon, pred_grad)
 		pert_recon = inversion(pert_pred)
+		print(reconstruction[0].data)
+		print(pert_recon[0].data)
 
 		plot = False
 		if plot:
