@@ -38,16 +38,16 @@ def perturb(prediction, epsilon, grad):
 
 	sign = grad.sign()
 	output = prediction + epsilon * sign
-	print(prediction[0].data)
-	print(output[0].data)
+	#print(prediction[0].data.max())
+	#print(output[0].data)
 
 	return output
 
-def defense(classifier, inversion, device, data_loader):
+def defense(classifier, inversion, device, data_loader, epsilon):
 
 	classifier.eval()
 	inversion.eval()
-	epsilon = 0.1
+	#epsilon = 1
 
 	for batch_idx, (data, target) in enumerate(data_loader):
 
@@ -69,7 +69,7 @@ def defense(classifier, inversion, device, data_loader):
 		pert_pred = perturb(prediction, epsilon, pred_grad)
 		pert_recon = inversion(pert_pred)
 
-		plot = False
+		plot = True
 		if plot:
 			truth = data[0:32]
 			inverse = reconstruction[0:32]
@@ -80,7 +80,7 @@ def defense(classifier, inversion, device, data_loader):
 					out[i * 24 :i * 24 + 8] = truth[i * 8:i * 8 + 8]
 					out[i * 24 + 8:i * 24 + 16] = inverse[i * 8:i * 8 + 8]
 					out[i * 24 + 16:i * 24 + 24] = defense[i * 8:i * 8 + 8]
-			vutils.save_image(out, 'out1/test.png', normalize=False)
+			vutils.save_image(out, 'out1/test_epsilon_{}.png'.format(epsilon), normalize=False)
 			plot = False
 
 
@@ -163,7 +163,10 @@ def main():
 		print("=> load classifier checkpoint '{}' failed".format(inversion_path))
 		return
 
-	defense(classifier, inversion, device, celeb_loader)
+	epsilon = 1e-10
+	for i in range(10):
+		defense(classifier, inversion, device, celeb_loader,epsilon)
+		epsilon *= 10
 
 
 if __name__ == '__main__':
