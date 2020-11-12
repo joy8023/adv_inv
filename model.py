@@ -51,7 +51,8 @@ class Classifier(nn.Module):
         if release:
             return F.softmax(x, dim=1)
         else:
-            return F.log_softmax(x, dim=1)
+            #return F.log_softmax(x, dim=1)
+            return x
 
 class Inversion(nn.Module):
     def __init__(self, nc, ngf, nz, truncation, c):

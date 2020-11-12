@@ -37,9 +37,12 @@ def predict(classifier, device, data_loader):
 def perturb(prediction, epsilon, grad):
 
 	sign = grad.sign()
-	output = prediction + epsilon * sign
-	#print(prediction[0].data)
-	#print(output[0].data)
+	output = prediction + epsilon * sign 
+	
+	print(prediction[0].data)
+	print(output[0].data)
+	
+	output = F.softmax(output, dim=1)
 
 	return output
 
@@ -53,22 +56,25 @@ def defense(classifier, inversion, device, data_loader, epsilon):
 
 		data, target = data.to(device), target.to(device)
 		prediction = classifier(data, release = True)
+
+		logit = classifier(data, release = False)
 		
 		#create new tensor for further perturbation
-		pred = torch.tensor(prediction).to(device)
+		logit = torch.tensor(logit).to(device)
 		pred.requires_grad = True
-		reconstruction = inversion(pred)
-		
+
+		reconstruction = inversion(prediction)
 		loss =F.mse_loss(reconstruction, data)
 		loss.backward()
 
-		print('grad:',pred.grad.data)
-		pred_grad = pred.grad.data
+		#print('grad:',logit.grad.data)
+		logit_grad = logit.grad.data
 
-		print('grad size:',pred_grad.size())
-		pert_pred = perturb(prediction, epsilon, pred_grad)
-		pert_pred = pert_pred.to(device)
-		pert_recon = inversion(pert_pred)
+		#print('grad size:', logit_grad.size())
+		perturbation = perturb(logit, epsilon, logit_grad)
+		perturbation= perturbation.to(device)
+		pert_recon = inversion(perturbation)
+		
 		print(reconstruction[0].data)
 		print(pert_recon[0].data)
 
