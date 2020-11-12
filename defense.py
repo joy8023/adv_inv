@@ -41,7 +41,7 @@ def perturb(prediction, epsilon, grad):
 	
 	print(prediction[0].data)
 	print(output[0].data)
-	
+
 	output = F.softmax(output, dim=1)
 
 	return output
@@ -61,9 +61,9 @@ def defense(classifier, inversion, device, data_loader, epsilon):
 		
 		#create new tensor for further perturbation
 		logit = torch.tensor(logit).to(device)
-		pred.requires_grad = True
+		logit.requires_grad = True
 
-		reconstruction = inversion(prediction)
+		reconstruction = inversion(F.softmax(logit, dim=1))
 		loss =F.mse_loss(reconstruction, data)
 		loss.backward()
 
