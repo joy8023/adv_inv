@@ -9,6 +9,7 @@ from data import FaceScrub, CelebA
 from model import Classifier, Inversion
 import torch.nn.functional as F
 import torchvision.utils as vutils
+import numpy as np
 
 parser = argparse.ArgumentParser(description='defense against model inversion')
 parser.add_argument('--celeb-batch-size', type=int, default=64, metavar='')
@@ -22,6 +23,8 @@ parser.add_argument('--c', type=float, default=50.)
 parser.add_argument('--num_workers', type=int, default=1, metavar='')
 parser.add_argument('--no-cuda', action='store_true', default=False)
 parser.add_argument('--seed', type=int, default=1, metavar='')
+parser.add_argument('--epsilon', type = int, default = 1, metavar = '')
+parser.add_argument('--num_step', type = int, default = 10, metavar = '')
 
 def predict(classifier, device, data_loader):
 
@@ -37,14 +40,95 @@ def predict(classifier, device, data_loader):
 def perturb(prediction, epsilon, grad):
 
 	sign = grad.sign()
-	output = prediction + epsilon * sign 
+	logit_new = prediction + epsilon * sign 
 	
-	print(prediction[0].data)
-	print(output[0].data)
+	logit_diff = F.mse_loss(logit_new, prediction)
+	print('logit_diff:',logit_diff)
+	#print(prediction[0].data)
+	#print(output[0].data)
+	original_label = torch.max(prediction, 0)[1].data.numpy()
+	new_label = torch.max(logit_new, 0)[1].data.numpy()
 
-	output = F.softmax(output, dim=1)
+	accu = np.sum(original_label == new_label)/original_label.shape[0]
+	print(accu)
+
+
+	output = F.softmax(logit_new, dim=1)
+	output_diff = F.mse_loss(output, F.softmax(prediction, dim=1))
+	print('output_diff', output_diff)
+
+
 
 	return output
+
+
+def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
+
+	classifier.eval()
+	inversion.eval()
+	#epsilon = 1
+
+	after_noise = []
+
+	for batch_idx, (data, target) in enumerate(data_loader):
+
+		data, target = data.to(device), target.to(device)
+
+		for i in range(num_step):
+
+			print('********************perturbation iteration:',i)
+
+			#prediction = classifier(data, release = True)
+			logit = classifier(data, release = False)
+		
+			#create new tensor for further perturbation
+			logit = torch.tensor(logit).to(device)
+			logit.requires_grad = True
+
+			reconstruction = inversion(F.softmax(logit, dim=1))
+			loss =F.mse_loss(reconstruction, data)
+			loss.backward()
+
+			#print('grad:',logit.grad.data)
+			logit_grad = logit.grad.data
+
+			#print('grad size:', logit_grad.size())
+			perturbation = perturb(logit, epsilon, logit_grad)
+			perturbation= perturbation.to(device)
+			pert_recon = inversion(perturbation)
+
+			if i == 0:
+				truth = data[0:8]
+				inverse = reconstruction[0:8]
+				out = torch.cat((truth, inverse))
+
+
+			after_noise.append(pert_recon[0:8])
+
+	out = torch.cat((out, after_noise))
+	vutils.save_image(out, 'out1/test_epsilon_{}.png'.format(epsilon), normalize=False)
+
+
+		
+			#print(reconstruction[0].data)
+			#print(pert_recon[0].data)
+		'''
+		plot = False
+		if plot:
+			truth = data[0:32]
+			inverse = reconstruction[0:32]
+			defense = pert_recon[0:32]
+			out = torch.cat((truth, inverse))
+			out = torch.cat((out, defense))
+			for i in range(4):
+					out[i * 24 :i * 24 + 8] = truth[i * 8:i * 8 + 8]
+					out[i * 24 + 8:i * 24 + 16] = inverse[i * 8:i * 8 + 8]
+					out[i * 24 + 16:i * 24 + 24] = defense[i * 8:i * 8 + 8]
+			vutils.save_image(out, 'out1/test_epsilon_{}.png'.format(epsilon), normalize=False)
+			plot = False
+		'''
+
+	return
 
 def defense(classifier, inversion, device, data_loader, epsilon):
 
@@ -172,13 +256,14 @@ def main():
 		print("=> load classifier checkpoint '{}' failed".format(inversion_path))
 		return
 	
-	epsilon = 1e-10
+	#epsilon = 1e-10
 	'''
 	for i in range(10):
 		defense(classifier, inversion, device, celeb_loader,epsilon)
 		epsilon *= 10
 	'''
-	defense(classifier, inversion, device, celeb_loader,epsilon)
+	#defense(classifier, inversion, device, celeb_loader,epsilon)
+	add_noise(classifier, inversion, device, celeb_loader,epsilon, num_step)
 
 
 if __name__ == '__main__':
