@@ -112,7 +112,7 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 		
 			#print(reconstruction[0].data)
 			#print(pert_recon[0].data)
-		'''
+	'''
 		plot = False
 		if plot:
 			truth = data[0:32]
@@ -126,7 +126,7 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 					out[i * 24 + 16:i * 24 + 24] = defense[i * 8:i * 8 + 8]
 			vutils.save_image(out, 'out1/test_epsilon_{}.png'.format(epsilon), normalize=False)
 			plot = False
-		'''
+	'''
 
 	return
 
