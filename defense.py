@@ -256,7 +256,8 @@ def main():
 		print("=> load classifier checkpoint '{}' failed".format(inversion_path))
 		return
 	
-	#epsilon = 1e-10
+	epsilon = args.epsilon
+	num_step = args.num_step
 	'''
 	for i in range(10):
 		defense(classifier, inversion, device, celeb_loader,epsilon)
