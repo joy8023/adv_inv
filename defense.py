@@ -43,11 +43,11 @@ def perturb(prediction, epsilon, grad):
 	logit_new = prediction + epsilon * sign 
 	
 	logit_diff = F.mse_loss(logit_new, prediction)
-	print('logit_diff:',logit_diff)
+	print('logit_diff:',logit_diff。numpy())
 	#print(prediction[0].data)
 	#print(output[0].data)
-	original_label = torch.max(prediction, 0)[1].data.numpy()
-	new_label = torch.max(logit_new, 0)[1].data.numpy()
+	original_label = torch.max(prediction, 0)[1].numpy()
+	new_label = torch.max(logit_new, 0)[1].numpy()
 
 	accu = np.sum(original_label == new_label)/original_label.shape[0]
 	print(accu)
@@ -55,7 +55,7 @@ def perturb(prediction, epsilon, grad):
 
 	output = F.softmax(logit_new, dim=1)
 	output_diff = F.mse_loss(output, F.softmax(prediction, dim=1))
-	print('output_diff', output_diff)
+	print('output_diff', output_diff.numpy())
 
 
 
