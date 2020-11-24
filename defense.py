@@ -72,8 +72,7 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 	classifier.eval()
 	inversion.eval()
 	#epsilon = 1
-
-	after_noise = []
+	#after_noise = []
 
 	for batch_idx, (data, target) in enumerate(data_loader):
 
@@ -81,7 +80,7 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 
 		for i in range(num_step):
 
-			print('********************perturbation iteration:',i)
+			print('========perturbation iteration:',i)
 
 			#prediction = classifier(data, release = True)
 			logit = classifier(data, release = False)
@@ -109,9 +108,11 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 				truth = data[0:8]
 				inverse = reconstruction[0:8]
 				out = torch.cat((truth, inverse))
+				out = torch.cat((out, pert_recon[0:8]))
 
 
-			after_noise.append(pert_recon[0:8])
+			out = out = torch.cat((out, pert_recon[0:8]))
+			data = torch.tensor(pert_recon).to(device)
 		break
 
 	out = torch.cat((out, torch.tensor(after_noise)))
