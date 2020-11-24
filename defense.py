@@ -26,6 +26,9 @@ parser.add_argument('--seed', type=int, default=1, metavar='')
 parser.add_argument('--epsilon', type = int, default = 1, metavar = '')
 parser.add_argument('--num_step', type = int, default = 10, metavar = '')
 
+
+
+
 def predict(classifier, device, data_loader):
 
 	classifier.eval()
@@ -37,25 +40,27 @@ def predict(classifier, device, data_loader):
 
 	return output
 
-def perturb(prediction, epsilon, grad):
+def perturb(prediction, epsilon, grad, original_logit):
 
 	sign = grad.sign()
 	logit_new = prediction + epsilon * sign 
 	
-	logit_diff = F.mse_loss(logit_new, prediction)
-	print('logit_diff:',logit_diff。numpy())
+	logit_diff = F.mse_loss(logit_new, original_logit)
+	print('*************logit_diff:',logit_diff.item())
 	#print(prediction[0].data)
 	#print(output[0].data)
-	original_label = torch.max(prediction, 0)[1].numpy()
-	new_label = torch.max(logit_new, 0)[1].numpy()
+	original_label = torch.max(original_label, 0)[1].cpu().numpy()
+	new_label = torch.max(logit_new, 0)[1].cpu().numpy()
+	print(original_label)
+	print(original_label.shape)
 
 	accu = np.sum(original_label == new_label)/original_label.shape[0]
-	print(accu)
+	print('************accu:',accu)
 
 
 	output = F.softmax(logit_new, dim=1)
 	output_diff = F.mse_loss(output, F.softmax(prediction, dim=1))
-	print('output_diff', output_diff.numpy())
+	print('*************output_diff', output_diff.item())
 
 
 
@@ -92,8 +97,11 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 			#print('grad:',logit.grad.data)
 			logit_grad = logit.grad.data
 
+			if i == 0:
+				original_logit = logit
+
 			#print('grad size:', logit_grad.size())
-			perturbation = perturb(logit, epsilon, logit_grad)
+			perturbation = perturb(logit, epsilon, logit_grad, original_logit)
 			perturbation= perturbation.to(device)
 			pert_recon = inversion(perturbation)
 
