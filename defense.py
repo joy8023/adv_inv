@@ -49,13 +49,16 @@ def perturb(prediction, epsilon, grad, original_logit):
 	print('*************logit_diff:',logit_diff.item())
 	#print(prediction[0].data)
 	#print(output[0].data)
+
+
+	#calculate accuracy for perturbed images
 	original_label = torch.max(original_logit, 1)[1].cpu().numpy()
 	new_label = torch.max(logit_new, 1)[1].cpu().numpy()
-	#print(original_label)
-	print(new_label.shape)
-
 	accu = np.sum(original_label == new_label)/original_label.shape[0]
 	print('************accu:',accu)
+	print(torch.max(original_logit,1)[0].data)
+	print(new_logit[0][original_label[0]].item())
+	print(torch.max(new_logit,1)[0].data)
 
 
 	output = F.softmax(logit_new, dim=1)
@@ -115,7 +118,7 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 			data = torch.tensor(pert_recon).to(device)
 		break
 
-	out = torch.cat((out, torch.tensor(after_noise)))
+	#out = torch.cat((out, torch.tensor(after_noise)))
 	vutils.save_image(out, 'out1/test_epsilon_{}.png'.format(epsilon), normalize=False)
 
 
