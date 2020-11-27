@@ -23,7 +23,7 @@ parser.add_argument('--c', type=float, default=50.)
 parser.add_argument('--num_workers', type=int, default=1, metavar='')
 parser.add_argument('--no-cuda', action='store_true', default=False)
 parser.add_argument('--seed', type=int, default=1, metavar='')
-parser.add_argument('--epsilon', type = int, default = 1, metavar = '')
+parser.add_argument('--epsilon', type = float, default = 1, metavar = '')
 parser.add_argument('--num_step', type = int, default = 10, metavar = '')
 
 
@@ -40,25 +40,44 @@ def predict(classifier, device, data_loader):
 
 	return output
 
-def perturb(prediction, epsilon, grad, original_logit):
+def restore(new_logit, new_label, original_logit, original_label, amplifier = 1.1):
+
+	if original_logit[original_label] > new_logit[new_label]:
+		#print()
+		return new_logit
+	else:
+		new_logit[original_label] = new_logit[new_label]*amplifier
+		return new_logit
+
+
+
+
+def perturb(prediction, epsilon, grad, logit_original):
 
 	sign = grad.sign()
+	print(sign)
 	logit_new = prediction + epsilon * sign 
 	
-	logit_diff = F.mse_loss(logit_new, original_logit)
+	logit_diff = F.mse_loss(logit_new, logit_original)
 	print('*************logit_diff:',logit_diff.item())
 	#print(prediction[0].data)
 	#print(output[0].data)
 
 
+
+
 	#calculate accuracy for perturbed images
-	original_label = torch.max(original_logit, 1)[1].cpu().numpy()
+	original_label = torch.max(logit_original, 1)[1].cpu().numpy()
 	new_label = torch.max(logit_new, 1)[1].cpu().numpy()
 	accu = np.sum(original_label == new_label)/original_label.shape[0]
 	print('************accu:',accu)
-	print(torch.max(original_logit,1)[0].data)
-	print(new_logit[0][original_label[0]].item())
-	print(torch.max(new_logit,1)[0].data)
+	print(torch.max(logit_original,1)[0].data)
+	print(logit_new[0][original_label[0]].item())
+	print(logit_new[0][new_label[0]].item())
+	print(torch.max(logit_new,1)[0].data)
+
+	for i in range(64):
+		logit_new[i] = restore(logit_new[i],new_label[i], logit_original[i], original_label[i])
 
 
 	output = F.softmax(logit_new, dim=1)
