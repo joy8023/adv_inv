@@ -63,8 +63,8 @@ def perturb(prediction, epsilon, grad, logit_original):
 	#print(prediction[0].data)
 	#print(output[0].data)
 
-
-
+	for i in range(64):
+		logit_new[i] = restore(logit_new[i],new_label[i], logit_original[i], original_label[i])
 
 	#calculate accuracy for perturbed images
 	original_label = torch.max(logit_original, 1)[1].cpu().numpy()
@@ -76,8 +76,15 @@ def perturb(prediction, epsilon, grad, logit_original):
 	print(logit_new[0][new_label[0]].item())
 	print(torch.max(logit_new,1)[0].data)
 
-	for i in range(64):
-		logit_new[i] = restore(logit_new[i],new_label[i], logit_original[i], original_label[i])
+	'''
+	print(logit_original.size())
+	orig_label_onehot = F.one_hot(torch.tensor(original_label), 530)
+	print(orig_label_onehot.size())
+	new_label_onehot = F.one_hot(torch.tensor(new_label), 530)
+
+	logit_new[orig_label_onehot] = logit_new[new_label_onehot]*1.1
+	'''
+
 
 
 	output = F.softmax(logit_new, dim=1)
