@@ -76,13 +76,13 @@ def perturb(prediction, epsilon, grad, logit_original):
 	print(orig_label_onehot.size())
 	new_label_onehot = F.one_hot(torch.tensor(new_label), 530)
 
-	logit_new[orig_label_onehot] = logit_new[new_label_onehot]*1.1
+	logit_new[orig_label_onehot] = torch.max(logit_new, 1)[0]*1.1
 
 
 	new_label = torch.max(logit_new, 1)[1].cpu().numpy()
 
 	accu = np.sum(original_label == new_label)/original_label.shape[0]
-	
+
 	print('************accu:',accu)
 	print(torch.max(logit_original,1)[0].data)
 	print(logit_new[0][original_label[0]].item())
