@@ -50,8 +50,6 @@ def restore(new_logit, new_label, original_logit, original_label, amplifier = 1.
 		return new_logit
 
 
-
-
 def perturb(prediction, epsilon, grad, logit_original):
 
 	sign = grad.sign()
@@ -68,15 +66,9 @@ def perturb(prediction, epsilon, grad, logit_original):
 	original_label = torch.max(logit_original, 1)[1].cpu().numpy()
 	new_label = torch.max(logit_new, 1)[1].cpu().numpy()
 
+	'''
 	for i in range(64):
 		logit_new[i] = restore(logit_new[i],new_label[i], logit_original[i], original_label[i])
-
-	accu = np.sum(original_label == new_label)/original_label.shape[0]
-	print('************accu:',accu)
-	print(torch.max(logit_original,1)[0].data)
-	print(logit_new[0][original_label[0]].item())
-	print(logit_new[0][new_label[0]].item())
-	print(torch.max(logit_new,1)[0].data)
 
 	'''
 	print(logit_original.size())
@@ -85,7 +77,17 @@ def perturb(prediction, epsilon, grad, logit_original):
 	new_label_onehot = F.one_hot(torch.tensor(new_label), 530)
 
 	logit_new[orig_label_onehot] = logit_new[new_label_onehot]*1.1
-	'''
+
+
+	new_label = torch.max(logit_new, 1)[1].cpu().numpy()
+
+	accu = np.sum(original_label == new_label)/original_label.shape[0]
+	
+	print('************accu:',accu)
+	print(torch.max(logit_original,1)[0].data)
+	print(logit_new[0][original_label[0]].item())
+	print(logit_new[0][new_label[0]].item())
+	print(torch.max(logit_new,1)[0].data)
 
 
 
