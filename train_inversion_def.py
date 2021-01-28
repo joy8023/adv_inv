@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torchvision import transforms
 import os, shutil
-from data import FaceScrub, CelebA
+from data import FaceScrub, CelebA, CelebA_out
 from model import Classifier, Inversion
 import torch.nn.functional as F
 import torchvision.utils as vutils
@@ -32,12 +32,14 @@ def train(classifier, inversion, log_interval, device, data_loader, optimizer, e
     classifier.eval()
     inversion.train()
 
-    for batch_idx, (data, target) in enumerate(data_loader):
-        data, target = data.to(device), target.to(device)
+    for batch_idx, (data, target, out) in enumerate(data_loader):
+        data, target, out = data.to(device), target.to(device), out.to(device)
         optimizer.zero_grad()
+        '''
         with torch.no_grad():
             prediction = classifier(data, release=True)
-        reconstruction = inversion(prediction)
+        '''
+        reconstruction = inversion(out)
         loss = F.mse_loss(reconstruction, data)
         loss.backward()
         optimizer.step()
@@ -87,7 +89,8 @@ def main():
     torch.manual_seed(args.seed)
 
     transform = transforms.Compose([transforms.ToTensor()])
-    train_set = CelebA('./celeba_5w_255.npy', transform=transform)
+    train_set = CelebA('./celeba_5w_out.npz', transform=transform)
+    #train_set = CelebA('./celeba_5w_255.npy', transform=transform)
     # Inversion attack on TRAIN data of facescrub classifier
     test1_set = FaceScrub('./facescrub.npz', transform=transform, train=False)
     # Inversion attack on TEST data of facescrub classifier
@@ -135,9 +138,9 @@ def main():
                 'optimizer': optimizer.state_dict(),
                 'best_recon_loss': best_recon_loss
             }
-            torch.save(state, 'out/inversion.pth')
-            torch.save(inversion.state_dict(), 'out/inv_model_dict.pth')
-            shutil.copyfile('out/recon_test1_{}.png'.format(epoch), 'out/best_test1.png')
+            torch.save(state, 'out/inversion_def.pth')
+            torch.save(inversion.state_dict(), 'out/inv_model_def_dict.pth')
+            shutil.copyfile('out/recon_test1_def{}.png'.format(epoch), 'out/best_test1_def.png')
             #shutil.copyfile('out/recon_test2_{}.png'.format(epoch), 'out/best_test2.png')
 
 if __name__ == '__main__':

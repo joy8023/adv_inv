@@ -92,3 +92,45 @@ class CelebA(Dataset):
             target = self.target_transform(target)
 
         return img, target
+
+class CelebA_out(Dataset):
+    def __init__(self, root, transform=None, target_transform=None):
+        self.root = os.path.expanduser(root)
+        self.transform = transform
+        self.target_transform = target_transform
+
+        input = np.load(self.root)
+        data = input['images']
+        out = input['out']
+
+        '''
+        data = []
+        for i in range(10):
+            data.append(np.load(os.path.join(self.root, 'celebA_64_{}.npy').format(i + 1)))
+        data = np.concatenate(data, axis=0)
+
+        v_min = data.min(axis=0)
+        v_max = data.max(axis=0)
+        data = (data - v_min) / (v_max - v_min)
+        '''
+        labels = np.array([0] * data.shape[0])
+        
+        self.data = data
+        self.labels = labels
+        self.out = out
+    
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, index):
+        img, target, out = self.data[index], self.labels[index], self.out[index]
+        img = Image.fromarray(img)
+
+        if self.transform is not None:
+            img = self.transform(img)
+
+        if self.target_transform is not None:
+            target = self.target_transform(target)
+
+        return img, target, out
+
