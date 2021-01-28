@@ -105,8 +105,8 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 	classifier.eval()
 	inversion.eval()
 
-	ori_img = []
-	noise_logit = []
+	#ori_img = []
+	#noise_logit = []
 
 	for batch_idx, (data_, target_) in enumerate(data_loader):
 
@@ -150,13 +150,24 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 			out = out = torch.cat((out, pert_recon[0:8]))
 			'''
 			data = torch.tensor(pert_recon).to(device)
+		
+		if batch_idx == 0:
+			img = data
+			result = perturbation
 
-		ori_img.append(data_.cpu().numpy())
-		noise_logit.append(perturbation.detach().cpu().numpy())
+		img = torch.cat(img,data)
+		result = torch.cat(result,perturbation)
+
+		if batch_idx == 10:
+			break
+
+		#ori_img.append(data_.cpu().numpy())
+		#noise_logit.append(perturbation.detach().cpu().numpy())
+
 
 		# only do the first batch
 		#break
-
+	'''
 	#generating dataset with noise logit	
 	ori_img = np.array(ori_img)
 	noise_logit = np.array(noise_logit)
@@ -168,8 +179,13 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 
 	print(ori_img.shape)
 	print(noise_logit.shape)
+	'''
+	img = img.cpu().numpy()
+	result = result.detach().cpu().numpy()
+	print(img.shape)
+	print(result.shape)
 
-	np.savez("celeba_5w_out.npz", images = ori_img, out = noise_logit)
+	np.savez("celeba_5w_out.npz", images = img, out = result)
 	
 	#out = torch.cat((out, torch.tensor(after_noise)))
 	#vutils.save_image(out, 'out1/test_epsilon_{}.png'.format(epsilon), normalize=False)
