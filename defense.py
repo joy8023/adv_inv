@@ -155,19 +155,22 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 		noise_logit.append(perturbation.detach().cpu().numpy())
 
 		# only do the first batch
-		break
+		#break
 
 	#generating dataset with noise logit	
 	ori_img = np.array(ori_img)
 	noise_logit = np.array(noise_logit)
 	print(ori_img.shape)
 	print(noise_logit.shape)
-	'''
-	ori_img = ori_img.reshape([])
-	noise_logit = noise_logit.reshape([])
+	
+	ori_img = ori_img.reshape([-1,1,64,64])
+	noise_logit = noise_logit.reshape([-1,530])
+
+	print(ori_img.shape)
+	print(noise_logit.shape)
 
 	np.savez("celeba_5w_out.npz", images = ori_img, out = noise_logit)
-	'''
+	
 	#out = torch.cat((out, torch.tensor(after_noise)))
 	#vutils.save_image(out, 'out1/test_epsilon_{}.png'.format(epsilon), normalize=False)
 
