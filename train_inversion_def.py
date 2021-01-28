@@ -39,8 +39,8 @@ def train(classifier, inversion, log_interval, device, data_loader, optimizer, e
         with torch.no_grad():
             prediction = classifier(data, release=True)
         '''
-        with torch.no_grad():
-            reconstruction = inversion(out)
+        
+        reconstruction = inversion(out)
         loss = F.mse_loss(reconstruction, data)
         loss.backward()
         optimizer.step()
@@ -48,6 +48,9 @@ def train(classifier, inversion, log_interval, device, data_loader, optimizer, e
         if batch_idx % log_interval == 0:
             print('Train Epoch: {} [{}/{}]\tLoss: {:.6f}'.format( epoch, batch_idx * len(data),
                                                                   len(data_loader.dataset), loss.item()))
+
+        del data, out, loss
+        torch.cuda.empty_cache()
 
 def test(classifier, inversion, device, data_loader, epoch, msg):
     classifier.eval()
