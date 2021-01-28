@@ -13,7 +13,7 @@ import torchvision.utils as vutils
 # Training settings
 parser = argparse.ArgumentParser(description='Adversarial Model Inversion Demo')
 parser.add_argument('--batch-size', type=int, default=64, metavar='')
-parser.add_argument('--test-batch-size', type=int, default=1000, metavar='')
+parser.add_argument('--test-batch-size', type=int, default=500, metavar='')
 parser.add_argument('--epochs', type=int, default=100, metavar='')
 parser.add_argument('--lr', type=float, default=0.01, metavar='')
 parser.add_argument('--momentum', type=float, default=0.5, metavar='')
@@ -72,7 +72,7 @@ def test(classifier, inversion, device, data_loader, epoch, msg):
                 for i in range(4):
                     out[i * 16:i * 16 + 8] = inverse[i * 8:i * 8 + 8]
                     out[i * 16 + 8:i * 16 + 16] = truth[i * 8:i * 8 + 8]
-                vutils.save_image(out, 'out/recon_{}_{}.png'.format(msg.replace(" ", ""), epoch), normalize=False)
+                vutils.save_image(out, 'out/recon_{}_def{}.png'.format(msg.replace(" ", ""), epoch), normalize=False)
                 plot = False
 
     mse_loss /= len(data_loader.dataset) * 64 * 64
