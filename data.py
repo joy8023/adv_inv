@@ -100,7 +100,7 @@ class CelebA_out(Dataset):
         self.target_transform = target_transform
 
         input = np.load(self.root)
-        data = input['images']
+        data = np.squeeze(input['images'])
         out = input['out']
 
         '''

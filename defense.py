@@ -72,7 +72,7 @@ def perturb(prediction, epsilon, grad, logit_original):
 	#print(logit_original.size())
 	orig_label_onehot = F.one_hot(torch.tensor(original_label), 530)
 	#print(orig_label_onehot)
-	orig_label_onehot = torch.tensor(orig_label_onehot, dtype=torch.uint8).bool()
+	orig_label_onehot = torch.tensor(orig_label_onehot, dtype=torch.uint8)
 	#print(orig_label_onehot.size())
 	#new_label_onehot = F.one_hot(torch.tensor(new_label), 530)
 
@@ -122,7 +122,7 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 				logit = classifier(data, release = False)
 		
 			#create new tensor for further perturbation
-			logit = torch.tensor(logit).to(device)
+			logit = logit.clone().detach().to(device)
 			logit.requires_grad = True
 
 			reconstruction = inversion(F.softmax(logit, dim=1))
