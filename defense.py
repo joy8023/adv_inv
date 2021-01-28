@@ -111,13 +111,14 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 	for batch_idx, (data_, target_) in enumerate(data_loader):
 
 		data, target = data_.to(device), target_.to(device)
+		print('############batch:',batch_idx)
 
 		for i in range(num_step):
 
-			print('========perturbation iteration:',i)
+			#print('========perturbation iteration:',i)
 
 			#prediction = classifier(data, release = True)
-			with torch.no_grad:
+			with torch.no_grad():
 				logit = classifier(data, release = False)
 		
 			#create new tensor for further perturbation
