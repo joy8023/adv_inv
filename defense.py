@@ -12,7 +12,7 @@ import torchvision.utils as vutils
 import numpy as np
 
 parser = argparse.ArgumentParser(description='defense against model inversion')
-parser.add_argument('--celeb-batch-size', type=int, default=128, metavar='')
+parser.add_argument('--celeb-batch-size', type=int, default=256, metavar='')
 parser.add_argument('--face-batch-size', type=int, default=64, metavar='')
 parser.add_argument('--nc', type=int, default=1)
 parser.add_argument('--ndf', type=int, default=128)
@@ -151,6 +151,7 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 			'''
 			data = torch.tensor(pert_recon).to(device)
 		
+		#to save img and their result
 		if batch_idx == 0:
 			img = data
 			result = perturbation
@@ -158,28 +159,10 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 		img = torch.cat(img,data)
 		result = torch.cat(result,perturbation)
 
-		if batch_idx == 10:
-			break
 
-		#ori_img.append(data_.cpu().numpy())
-		#noise_logit.append(perturbation.detach().cpu().numpy())
-
-
-		# only do the first batch
+		#only do the first batch
 		#break
-	'''
-	#generating dataset with noise logit	
-	ori_img = np.array(ori_img)
-	noise_logit = np.array(noise_logit)
-	print(ori_img.shape)
-	print(noise_logit.shape)
-	
-	ori_img = ori_img.reshape([-1,1,64,64])
-	noise_logit = noise_logit.reshape([-1,530])
 
-	print(ori_img.shape)
-	print(noise_logit.shape)
-	'''
 	img = img.cpu().numpy()
 	result = result.detach().cpu().numpy()
 	print(img.shape)
