@@ -152,7 +152,7 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 			data = torch.tensor(pert_recon).to(device)
 
 		ori_img.append(data_.cpu().numpy())
-		noise_logit.append(perturbation.detach().numpy())
+		noise_logit.append(perturbation.detach().cpu().numpy())
 
 		# only do the first batch
 		break
