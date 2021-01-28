@@ -12,7 +12,7 @@ import torchvision.utils as vutils
 
 # Training settings
 parser = argparse.ArgumentParser(description='Adversarial Model Inversion Demo')
-parser.add_argument('--batch-size', type=int, default=128, metavar='')
+parser.add_argument('--batch-size', type=int, default=64, metavar='')
 parser.add_argument('--test-batch-size', type=int, default=1000, metavar='')
 parser.add_argument('--epochs', type=int, default=100, metavar='')
 parser.add_argument('--lr', type=float, default=0.01, metavar='')
@@ -33,7 +33,7 @@ def train(classifier, inversion, log_interval, device, data_loader, optimizer, e
     inversion.train()
 
     for batch_idx, (data, target, out) in enumerate(data_loader):
-        data, target, out = data.to(device), target.to(device), out.to(device)
+        data, out = data.to(device), out.to(device)
         optimizer.zero_grad()
         '''
         with torch.no_grad():
