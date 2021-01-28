@@ -39,7 +39,8 @@ def train(classifier, inversion, log_interval, device, data_loader, optimizer, e
         with torch.no_grad():
             prediction = classifier(data, release=True)
         '''
-        reconstruction = inversion(out)
+        with torch.no_grad():
+            reconstruction = inversion(out)
         loss = F.mse_loss(reconstruction, data)
         loss.backward()
         optimizer.step()
