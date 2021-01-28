@@ -156,8 +156,8 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 			img = data
 			result = perturbation
 
-		img = torch.cat(img,data)
-		result = torch.cat(result,perturbation)
+		img = torch.cat((img,data))
+		result = torch.cat((result,perturbation))
 
 
 		#only do the first batch
