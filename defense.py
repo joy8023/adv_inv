@@ -56,7 +56,7 @@ def perturb(prediction, epsilon, grad, logit_original):
 	logit_new = prediction + epsilon * sign 
 	
 	logit_diff = F.mse_loss(logit_new, logit_original)
-	print('*************logit_diff:',logit_diff.item())
+	#print('*************logit_diff:',logit_diff.item())
 
 	#calculate accuracy for perturbed images
 	original_label = torch.max(logit_original, 1)[1].cpu().numpy()
@@ -84,7 +84,7 @@ def perturb(prediction, epsilon, grad, logit_original):
 
 	accu = np.sum(original_label == new_label)/original_label.shape[0]
 
-	print('************accu:',accu)
+	#print('************accu:',accu)
 
 	'''
 	print(torch.max(logit_original,1)[0].data)
@@ -95,7 +95,7 @@ def perturb(prediction, epsilon, grad, logit_original):
 
 	output = F.softmax(logit_new, dim=1)
 	output_diff = F.mse_loss(output, F.softmax(prediction, dim=1))
-	print('************output_diff', output_diff.item())
+	#print('************output_diff', output_diff.item())
 
 	return output
 
@@ -151,16 +151,23 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 			'''
 			data = torch.tensor(pert_recon).to(device)
 
-		ori_img.append(data_)
+		ori_img.append(data_.cpu())
 		noise_logit.append(perturbation.cpu())
 
 		# only do the first batch
-		#break
+		break
+
+	#generating dataset with noise logit	
 	ori_img = np.array(ori_img)
 	noise_logit = np.array(noise_logit)
 	print(ori_img.shape)
 	print(noise_logit.shape)
+	'''
+	ori_img = ori_img.reshape([])
+	noise_logit = noise_logit.reshape([])
 
+	np.savez("celeba_5w_out.npz", images = ori_img, out = noise_logit)
+	'''
 	#out = torch.cat((out, torch.tensor(after_noise)))
 	#vutils.save_image(out, 'out1/test_epsilon_{}.png'.format(epsilon), normalize=False)
 
