@@ -12,7 +12,7 @@ import torchvision.utils as vutils
 import numpy as np
 
 parser = argparse.ArgumentParser(description='defense against model inversion')
-parser.add_argument('--celeb-batch-size', type=int, default=256, metavar='')
+parser.add_argument('--celeb-batch-size', type=int, default=128, metavar='')
 parser.add_argument('--face-batch-size', type=int, default=64, metavar='')
 parser.add_argument('--nc', type=int, default=1)
 parser.add_argument('--ndf', type=int, default=128)
@@ -72,7 +72,7 @@ def perturb(prediction, epsilon, grad, logit_original):
 	#print(logit_original.size())
 	orig_label_onehot = F.one_hot(torch.tensor(original_label), 530)
 	#print(orig_label_onehot)
-	orig_label_onehot = torch.tensor(orig_label_onehot, dtype=torch.uint8)
+	orig_label_onehot = torch.tensor(orig_label_onehot, dtype=torch.uint8).bool()
 	#print(orig_label_onehot.size())
 	#new_label_onehot = F.one_hot(torch.tensor(new_label), 530)
 
@@ -149,7 +149,7 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 			
 			out = out = torch.cat((out, pert_recon[0:8]))
 			'''
-			data = torch.tensor(pert_recon).to(device)
+			data = pert_recon.clone().detach().to(device)
 		
 		#to save img and their result
 		if batch_idx == 0:
