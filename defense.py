@@ -12,7 +12,7 @@ import torchvision.utils as vutils
 import numpy as np
 
 parser = argparse.ArgumentParser(description='defense against model inversion')
-parser.add_argument('--celeb-batch-size', type=int, default=64, metavar='')
+parser.add_argument('--celeb-batch-size', type=int, default=128, metavar='')
 parser.add_argument('--face-batch-size', type=int, default=64, metavar='')
 parser.add_argument('--nc', type=int, default=1)
 parser.add_argument('--ndf', type=int, default=128)
@@ -151,8 +151,8 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 			'''
 			data = torch.tensor(pert_recon).to(device)
 
-		ori_img.append(data_.cpu())
-		noise_logit.append(perturbation.cpu())
+		ori_img.append(data_.cpu().numpy())
+		noise_logit.append(perturbation.cpu().numpy())
 
 		# only do the first batch
 		break
