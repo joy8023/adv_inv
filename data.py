@@ -62,7 +62,7 @@ class FaceScrub_out(Dataset):
 
         input = np.load(path)
 
-        data = input['images']
+        data = np.squeeze(input['images'])
         out = input['out']
 
         np.random.seed(666)

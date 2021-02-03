@@ -256,6 +256,36 @@ def inv_test(classifier, inversion, device, data_loader, epoch, msg = 'test'):
 	print('\nTest inversion model on {} set: Average MSE loss: {:.6f}\n'.format(msg, mse_loss))
 	return mse_loss
 
+#test with output directly
+def inv_test2(inversion, device, data_loader, epoch, msg = 'test'):
+
+	#classifier.eval()
+	inversion.eval()
+	mse_loss = 0
+	plot = True
+
+	with torch.no_grad():
+		for data, out in data_loader:
+			data, out = data.to(device), out.to(device)
+
+			#prediction = classifier(data, release=True)
+			reconstruction = inversion(out)
+			mse_loss += F.mse_loss(reconstruction, data, reduction='sum').item()
+
+			if plot:
+				truth = data[0:32]
+				inverse = reconstruction[0:32]
+				out = torch.cat((inverse, truth))
+				for i in range(4):
+					out[i * 16:i * 16 + 8] = inverse[i * 8:i * 8 + 8]
+					out[i * 16 + 8:i * 16 + 16] = truth[i * 8:i * 8 + 8]
+				vutils.save_image(out, 'out/test_recon_{}_{}.png'.format(msg.replace(" ", ""), epoch), normalize=False)
+				plot = False
+
+	mse_loss /= len(data_loader.dataset) * 64 * 64
+	print('\nTest inversion model on {} set: Average MSE loss: {:.6f}\n'.format(msg, mse_loss))
+	return mse_loss
+
 def main():
 
 	args = parser.parse_args()
@@ -283,7 +313,9 @@ def main():
 	inversion = nn.DataParallel(Inversion(nc=args.nc, ngf=args.ngf, nz=args.nz, truncation=args.truncation, c=args.c)).to(device)
 
 	model_path = 'out/model_dict.pth'
-	inversion_path = 'out/inversion.pth'
+	#inversion_path = 'out/inversion.pth'
+	inversion_path = 'out/inversion_def.pth'
+
 
 	try:
 		model_checkpoint = torch.load(model_path)
@@ -311,8 +343,9 @@ def main():
 		epsilon *= 10
 	'''
 	#defense(classifier, inversion, device, celeb_loader,epsilon)
-	add_noise(classifier, inversion, device, face_loader, epsilon, num_step)
-
+	
+	#add_noise(classifier, inversion, device, face_loader, epsilon, num_step)
+	inv_test2(inversion, device, face_loader, epoch )
 
 if __name__ == '__main__':
 	main()
