@@ -168,7 +168,8 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 	print(img.shape)
 	print(result.shape)
 
-	np.savez("celeba_5w_out.npz", images = img, out = result)
+	#generating dataset
+	np.savez("face_out.npz", images = img, out = result)
 	
 	#out = torch.cat((out, torch.tensor(after_noise)))
 	#vutils.save_image(out, 'out1/test_epsilon_{}.png'.format(epsilon), normalize=False)
@@ -255,38 +256,6 @@ def inv_test(classifier, inversion, device, data_loader, epoch, msg = 'test'):
 	print('\nTest inversion model on {} set: Average MSE loss: {:.6f}\n'.format(msg, mse_loss))
 	return mse_loss
 
-
-
-#generate CelebA dataset with defensive logit
-def celeb_logit(path):
-
-	if not os.path.exists(path):
-		print("no such directory")
-		return
-
-	images = []
-	C = 0
-
-	with os.scandir(path) as files:
-		
-		for file in files:
-			if os.path.splitext(file)[1] == '.jpg' and C < 50000:
-				img = cv2.imread(os.path.join(file), cv2.IMREAD_GRAYSCALE)
-				#print(img.shape)
-				img = cv2.resize(img[70:178,35:143],(64,64))
-				#cv2.imshow("img",img)
-				#cv2.waitKey(0)
-				images.append(img)
-				C += 1
-	
-	images = np.array(images)
-	#images = images / 255.0
-
-	print(images.shape)
-	#print(images.max())
-	np.save("celeba_5w_255.npy", images)
-
-
 def main():
 
 	args = parser.parse_args()
@@ -342,7 +311,7 @@ def main():
 		epsilon *= 10
 	'''
 	#defense(classifier, inversion, device, celeb_loader,epsilon)
-	add_noise(classifier, inversion, device, celeb_loader, epsilon, num_step)
+	add_noise(classifier, inversion, device, face_loader, epsilon, num_step)
 
 
 if __name__ == '__main__':

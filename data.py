@@ -54,6 +54,43 @@ class FaceScrub(Dataset):
 
         return img, target
 
+class FaceScrub_out(Dataset):
+    def __init__(self, path, transform=None, target_transform=None, train=True):
+        self.root = os.path.expanduser(path)
+        self.transform = transform
+        self.target_transform = target_transform
+
+        input = np.load(path)
+
+        data = input['images']
+        out = input['out']
+
+        np.random.seed(666)
+        perm = np.arange(len(data))
+        np.random.shuffle(perm)
+        data = data[perm]
+        out = out[perm]
+
+        if train:
+            self.data = data[0:int(0.8 * len(data))]
+            self.out = out[0:int(0.8 * len(data))]
+        else:
+            self.data = data[int(0.8 * len(data)):]
+            self.out = out[int(0.8 * len(data)):]
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, index):
+        img, out = self.data[index], self.out[index]
+        #img = Image.fromarray(img)
+
+        if self.transform is not None:
+            img = self.transform(img)
+            
+        return img, out
+
+
 class CelebA(Dataset):
     def __init__(self, root, transform=None, target_transform=None):
         self.root = os.path.expanduser(root)
@@ -103,18 +140,6 @@ class CelebA_out(Dataset):
         data = np.squeeze(input['images'])
         out = input['out']
 
-        '''
-        data = []
-        for i in range(10):
-            data.append(np.load(os.path.join(self.root, 'celebA_64_{}.npy').format(i + 1)))
-        data = np.concatenate(data, axis=0)
-
-        v_min = data.min(axis=0)
-        v_max = data.max(axis=0)
-        data = (data - v_min) / (v_max - v_min)
-        '''
-        #labels = np.array([0] * data.shape[0])
-        
         self.data = data[:num]
         #self.labels = labels
         self.out = out[:num]
@@ -124,13 +149,10 @@ class CelebA_out(Dataset):
 
     def __getitem__(self, index):
         img,out = self.data[index], self.out[index]
-        img = Image.fromarray(img)
+        #img = Image.fromarray(img)
 
         if self.transform is not None:
             img = self.transform(img)
-
-        #if self.target_transform is not None:
-        #    target = self.target_transform(target)
 
         return img, out
 
