@@ -12,9 +12,9 @@ import torchvision.utils as vutils
 
 # Training settings
 parser = argparse.ArgumentParser(description='Adversarial Model Inversion Demo')
-parser.add_argument('--batch-size', type=int, default=64, metavar='')
+parser.add_argument('--batch-size', type=int, default=128, metavar='')
 parser.add_argument('--test-batch-size', type=int, default=500, metavar='')
-parser.add_argument('--epochs', type=int, default=100, metavar='')
+parser.add_argument('--epochs', type=int, default=50, metavar='')
 parser.add_argument('--lr', type=float, default=0.01, metavar='')
 parser.add_argument('--momentum', type=float, default=0.5, metavar='')
 parser.add_argument('--no-cuda', action='store_true', default=False)
@@ -28,13 +28,14 @@ parser.add_argument('--truncation', type=int, default=530)
 parser.add_argument('--c', type=float, default=50.)
 parser.add_argument('--num_workers', type=int, default=1, metavar='')
 
-def train(classifier, inversion, log_interval, device, data_loader, optimizer, epoch):
+def train( inversion, log_interval, device, data_loader, optimizer, epoch):
     classifier.eval()
     inversion.train()
 
-    for batch_idx, (data, target, out) in enumerate(data_loader):
+    for batch_idx, (data, out) in enumerate(data_loader):
         data, out = data.to(device), out.to(device)
         optimizer.zero_grad()
+        
         '''
         with torch.no_grad():
             prediction = classifier(data, release=True)
@@ -52,17 +53,17 @@ def train(classifier, inversion, log_interval, device, data_loader, optimizer, e
         del data, out, loss
         torch.cuda.empty_cache()
 
-def test(classifier, inversion, device, data_loader, epoch, msg):
+def test(inversion, device, data_loader, epoch, msg):
     classifier.eval()
     inversion.eval()
     mse_loss = 0
     plot = True
     with torch.no_grad():
         for data, target in data_loader:
-            data, target = data.to(device), target.to(device)
+            data, out = data.to(device), out.to(device)
 
-            prediction = classifier(data, release=True)
-            reconstruction = inversion(prediction)
+            #prediction = classifier(data, release=True)
+            reconstruction = inversion(out)
             mse_loss += F.mse_loss(reconstruction, data, reduction='sum').item()
 
             if plot:
@@ -104,14 +105,14 @@ def main():
     test1_loader = torch.utils.data.DataLoader(test1_set, batch_size=args.test_batch_size, shuffle=False, **kwargs)
     #test2_loader = torch.utils.data.DataLoader(test2_set, batch_size=args.test_batch_size, shuffle=False, **kwargs)
 
-    classifier = nn.DataParallel(Classifier(nc=args.nc, ndf=args.ndf, nz=args.nz)).to(device)
+    #classifier = nn.DataParallel(Classifier(nc=args.nc, ndf=args.ndf, nz=args.nz)).to(device)
     inversion = nn.DataParallel(Inversion(nc=args.nc, ngf=args.ngf, nz=args.nz, truncation=args.truncation, c=args.c)).to(device)
     optimizer = optim.Adam(inversion.parameters(), lr=0.0002, betas=(0.5, 0.999), amsgrad=True)
 
     # Load classifier
     #path = 'out/classifier.pth'
     path = 'out/model_dict.pth'
-    #checkpoint = torch.load(path)
+    '''
     try:
         checkpoint = torch.load(path)
         print(checkpoint)
@@ -125,13 +126,14 @@ def main():
     except:
         print("=> load classifier checkpoint '{}' failed".format(path))
         return
+    '''
 
 
     # Train inversion model
     best_recon_loss = 999
     for epoch in range(1, args.epochs + 1):
-        train(classifier, inversion, args.log_interval, device, train_loader, optimizer, epoch)
-        recon_loss = test(classifier, inversion, device, test1_loader, epoch, 'test1')
+        train(inversion, args.log_interval, device, train_loader, optimizer, epoch)
+        recon_loss = test( inversion, device, test1_loader, epoch, 'test1')
         #test(classifier, inversion, device, test2_loader, epoch, 'test2')
 
         if recon_loss < best_recon_loss:
