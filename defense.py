@@ -105,19 +105,15 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 	classifier.eval()
 	inversion.eval()
 
-	#ori_img = []
-	#noise_logit = []
-
 	for batch_idx, (data_, target_) in enumerate(data_loader):
 
-		data, target = data_.to(device), target_.to(device)
+		data = data_.to(device)
 		print('############batch:',batch_idx)
 
 		for i in range(num_step):
 
 			#print('========perturbation iteration:',i)
 
-			#prediction = classifier(data, release = True)
 			with torch.no_grad():
 				logit = classifier(data, release = False)
 		
@@ -153,10 +149,10 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 		
 		#to save img and their result
 		if batch_idx == 0:
-			img = data
+			img = data_
 			result = perturbation
 
-		img = torch.cat((img,data))
+		img = torch.cat((img,data_))
 		result = torch.cat((result,perturbation))
 
 
@@ -169,62 +165,12 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 	print(result.shape)
 
 	#generating dataset
-	np.savez("face_out.npz", images = img, out = result)
+	np.savez("celeba_5w_out.npz", images = img, out = result)
 	
 	#out = torch.cat((out, torch.tensor(after_noise)))
 	#vutils.save_image(out, 'out1/test_epsilon_{}.png'.format(epsilon), normalize=False)
 
 	return
-
-#old version
-def defense(classifier, inversion, device, data_loader, epsilon):
-
-	classifier.eval()
-	inversion.eval()
-	#epsilon = 1
-
-	for batch_idx, (data, target) in enumerate(data_loader):
-
-		data, target = data.to(device), target.to(device)
-		prediction = classifier(data, release = True)
-
-		logit = classifier(data, release = False)
-		
-		#create new tensor for further perturbation
-		logit = torch.tensor(logit).to(device)
-		logit.requires_grad = True
-
-		reconstruction = inversion(F.softmax(logit, dim=1))
-		loss =F.mse_loss(reconstruction, data)
-		loss.backward()
-
-		#print('grad:',logit.grad.data)
-		logit_grad = logit.grad.data
-
-		#print('grad size:', logit_grad.size())
-		perturbation = perturb(logit, epsilon, logit_grad)
-		perturbation= perturbation.to(device)
-		pert_recon = inversion(perturbation)
-		
-		print(reconstruction[0].data)
-		print(pert_recon[0].data)
-
-		plot = False
-		if plot:
-			truth = data[0:32]
-			inverse = reconstruction[0:32]
-			defense = pert_recon[0:32]
-			out = torch.cat((truth, inverse))
-			out = torch.cat((out, defense))
-			for i in range(4):
-					out[i * 24 :i * 24 + 8] = truth[i * 8:i * 8 + 8]
-					out[i * 24 + 8:i * 24 + 16] = inverse[i * 8:i * 8 + 8]
-					out[i * 24 + 16:i * 24 + 24] = defense[i * 8:i * 8 + 8]
-			vutils.save_image(out, 'out1/test_epsilon_{}.png'.format(epsilon), normalize=False)
-			plot = False
-
-
-		return
 
 
 def inv_test(classifier, inversion, device, data_loader, epoch = 100, msg = 'test'):
@@ -339,18 +285,10 @@ def main():
 	
 	epsilon = args.epsilon
 	num_step = args.num_step
-
-
-	'''
-	for i in range(10):
-		defense(classifier, inversion, device, celeb_loader,epsilon)
-		epsilon *= 10
-	'''
-	#defense(classifier, inversion, device, celeb_loader,epsilon)
 	
-	#add_noise(classifier, inversion, device, face_loader, epsilon, num_step)
+	add_noise(classifier, inversion, device, celeb_loader, epsilon, num_step)
 	#inv_test2(inversion, device, face_loader)
-	inv_test(classifier, inversion, device, data_loader):
+	#inv_test(classifier, inversion, device, face_loader)
 
 if __name__ == '__main__':
 	main()
