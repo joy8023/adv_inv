@@ -227,7 +227,7 @@ def defense(classifier, inversion, device, data_loader, epsilon):
 		return
 
 
-def inv_test(classifier, inversion, device, data_loader, epoch, msg = 'test'):
+def inv_test(classifier, inversion, device, data_loader, epoch = 100, msg = 'test'):
 
 	classifier.eval()
 	inversion.eval()
@@ -249,7 +249,7 @@ def inv_test(classifier, inversion, device, data_loader, epoch, msg = 'test'):
 				for i in range(4):
 					out[i * 16:i * 16 + 8] = inverse[i * 8:i * 8 + 8]
 					out[i * 16 + 8:i * 16 + 16] = truth[i * 8:i * 8 + 8]
-				vutils.save_image(out, 'out/recon_{}_{}.png'.format(msg.replace(" ", ""), epoch), normalize=False)
+				vutils.save_image(out, 'out/ori_recon_{}_{}.png'.format(msg.replace(" ", ""), epoch), normalize=False)
 				plot = False
 
 	mse_loss /= len(data_loader.dataset) * 64 * 64
@@ -307,7 +307,7 @@ def main():
 	face_set = FaceScrub('./facescrub.npz', transform=transform, train=False)
 
 	#celeb_set = CelebA('./celeba_5w_255.npy', transform=transform)
-	face_set = FaceScrub_out('./face_out.npz', transform=transform, train=False)
+	#face_set = FaceScrub_out('./face_out.npz', transform=transform, train=False)
 
 	celeb_loader = torch.utils.data.DataLoader(celeb_set, batch_size=args.celeb_batch_size, shuffle=True, **kwargs)
 	face_loader = torch.utils.data.DataLoader(face_set, batch_size=args.face_batch_size, shuffle=False, **kwargs)
@@ -316,8 +316,8 @@ def main():
 	inversion = nn.DataParallel(Inversion(nc=args.nc, ngf=args.ngf, nz=args.nz, truncation=args.truncation, c=args.c)).to(device)
 
 	model_path = 'out/model_dict.pth'
-	#inversion_path = 'out/inversion.pth'
-	inversion_path = 'out/inversion_def.pth'
+	inversion_path = 'out/inversion.pth'
+	#inversion_path = 'out/inversion_def.pth'
 
 
 	try:
@@ -349,7 +349,8 @@ def main():
 	#defense(classifier, inversion, device, celeb_loader,epsilon)
 	
 	#add_noise(classifier, inversion, device, face_loader, epsilon, num_step)
-	inv_test2(inversion, device, face_loader)
+	#inv_test2(inversion, device, face_loader)
+	inv_test(classifier, inversion, device, data_loader):
 
 if __name__ == '__main__':
 	main()
