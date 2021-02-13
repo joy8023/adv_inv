@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torchvision import transforms
 import os, shutil
-from data import FaceScrub, CelebA
+from data import FaceScrub, CelebA, FaceScrub_out, CelebA_out
 from model import Classifier, Inversion
 import torch.nn.functional as F
 import torchvision.utils as vutils
@@ -257,7 +257,7 @@ def inv_test(classifier, inversion, device, data_loader, epoch, msg = 'test'):
 	return mse_loss
 
 #test with output directly
-def inv_test2(inversion, device, data_loader, epoch, msg = 'test'):
+def inv_test2(inversion, device, data_loader, epoch = 100, msg = 'test'):
 
 	#classifier.eval()
 	inversion.eval()
@@ -306,6 +306,9 @@ def main():
 	# Inversion attack on TRAIN data of facescrub classifier
 	face_set = FaceScrub('./facescrub.npz', transform=transform, train=False)
 
+	#celeb_set = CelebA('./celeba_5w_255.npy', transform=transform)
+	face_set = FaceScrub_out('./face_out.npz', transform=transform, train=False)
+
 	celeb_loader = torch.utils.data.DataLoader(celeb_set, batch_size=args.celeb_batch_size, shuffle=True, **kwargs)
 	face_loader = torch.utils.data.DataLoader(face_set, batch_size=args.face_batch_size, shuffle=False, **kwargs)
 
@@ -337,6 +340,7 @@ def main():
 	epsilon = args.epsilon
 	num_step = args.num_step
 
+
 	'''
 	for i in range(10):
 		defense(classifier, inversion, device, celeb_loader,epsilon)
@@ -345,7 +349,7 @@ def main():
 	#defense(classifier, inversion, device, celeb_loader,epsilon)
 	
 	#add_noise(classifier, inversion, device, face_loader, epsilon, num_step)
-	inv_test2(inversion, device, face_loader, epoch )
+	inv_test2(inversion, device, face_loader)
 
 if __name__ == '__main__':
 	main()
