@@ -195,7 +195,7 @@ def inv_test(classifier, inversion, device, data_loader, epoch = 100, msg = 'tes
 				for i in range(4):
 					out[i * 16:i * 16 + 8] = inverse[i * 8:i * 8 + 8]
 					out[i * 16 + 8:i * 16 + 16] = truth[i * 8:i * 8 + 8]
-				vutils.save_image(out, 'out/ori_recon_{}_{}.png'.format(msg.replace(" ", ""), epoch), normalize=False)
+				vutils.save_image(out, 'out2/recon_{}_{}_vanilla.png'.format(msg.replace(" ", ""), epoch), normalize=False)
 				plot = False
 
 	mse_loss /= len(data_loader.dataset) * 64 * 64
@@ -225,11 +225,11 @@ def inv_test2(inversion, device, data_loader, epoch = 100, msg = 'test'):
 				for i in range(4):
 					out[i * 16:i * 16 + 8] = inverse[i * 8:i * 8 + 8]
 					out[i * 16 + 8:i * 16 + 16] = truth[i * 8:i * 8 + 8]
-				vutils.save_image(out, 'out/test_recon_{}_{}.png'.format(msg.replace(" ", ""), epoch), normalize=False)
+				vutils.save_image(out, 'out2/recon_{}_{}_def.png'.format(msg.replace(" ", ""), epoch), normalize=False)
 				plot = False
 
 	mse_loss /= len(data_loader.dataset) * 64 * 64
-	print('\nTest inversion model on {} set: Average MSE loss: {:.6f}\n'.format(msg, mse_loss))
+	print('\nTest inversion model on defensed {} set: Average MSE loss: {:.6f}\n'.format(msg, mse_loss))
 	return mse_loss
 
 def main():
@@ -286,9 +286,9 @@ def main():
 	epsilon = args.epsilon
 	num_step = args.num_step
 	
-	add_noise(classifier, inversion, device, celeb_loader, epsilon, num_step)
+	#add_noise(classifier, inversion, device, celeb_loader, epsilon, num_step)
 	#inv_test2(inversion, device, face_loader)
-	#inv_test(classifier, inversion, device, face_loader)
+	inv_test(classifier, inversion, device, face_loader)
 
 if __name__ == '__main__':
 	main()
