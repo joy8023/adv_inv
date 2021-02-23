@@ -71,12 +71,17 @@ class FaceScrub_out(Dataset):
         data = data[perm]
         out = out[perm]
 
+        '''
         if train:
             self.data = data[0:int(0.8 * len(data))]
             self.out = out[0:int(0.8 * len(data))]
         else:
             self.data = data[int(0.8 * len(data)):]
             self.out = out[int(0.8 * len(data)):]
+        '''
+        self.data = data
+        self.out = out
+
 
     def __len__(self):
         return len(self.data)

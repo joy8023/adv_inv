@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torchvision import transforms
 import os, shutil
-from data import FaceScrub, CelebA, CelebA_out
+from data import FaceScrub, CelebA, CelebA_out, FaceScrub_out
 from model import Classifier, Inversion
 import torch.nn.functional as F
 import torchvision.utils as vutils
@@ -97,7 +97,7 @@ def main():
     train_set = CelebA_out('./celeba_def.npz', transform=transform)
     #train_set = CelebA('./celeba_5w_255.npy', transform=transform)
     # Inversion attack on TRAIN data of facescrub classifier
-    test1_set = FaceScrub('./faces_def.npz', transform=transform, train=False)
+    test1_set = FaceScrub_out('./face_def.npz', transform=transform, train=False)
     # Inversion attack on TEST data of facescrub classifier
     #test2_set = FaceScrub('./facescrub.npz', transform=transform, train=False)
 
