@@ -59,7 +59,7 @@ def test(inversion, device, data_loader, epoch, msg):
     mse_loss = 0
     plot = True
     with torch.no_grad():
-        for data, target in data_loader:
+        for data, out in data_loader:
             data, out = data.to(device), out.to(device)
 
             #prediction = classifier(data, release=True)
@@ -94,10 +94,10 @@ def main():
     torch.manual_seed(args.seed)
 
     transform = transforms.Compose([transforms.ToTensor()])
-    train_set = CelebA_out('./celeba_5w_out.npz', transform=transform)
+    train_set = CelebA_out('./celeba_def.npz', transform=transform)
     #train_set = CelebA('./celeba_5w_255.npy', transform=transform)
     # Inversion attack on TRAIN data of facescrub classifier
-    test1_set = FaceScrub('./facescrub.npz', transform=transform, train=False)
+    test1_set = FaceScrub('./faces_def.npz', transform=transform, train=False)
     # Inversion attack on TEST data of facescrub classifier
     #test2_set = FaceScrub('./facescrub.npz', transform=transform, train=False)
 
@@ -139,7 +139,7 @@ def main():
                 'best_recon_loss': best_recon_loss
             }
             torch.save(state, 'model/inversion_def.pth')
-            torch.save(inversion.state_dict(), 'model/inv_model_def_dict.pth')
+            #torch.save(inversion.state_dict(), 'model/inv_model_def_dict.pth')
             shutil.copyfile('out/recon_test1_def{}.png'.format(epoch), 'out/best_test1_def.png')
             #shutil.copyfile('out/recon_test2_{}.png'.format(epoch), 'out/best_test2.png')
 
