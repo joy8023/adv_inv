@@ -110,6 +110,17 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 		data = data_.to(device)
 		print('############batch:',batch_idx)
 
+		if batch_idx%2 == 1:
+			with torch.no_grad():
+				pred = classifier(data, release = True)
+
+
+			img = torch.cat((img,data_))
+			result = torch.cat((result,pred))
+			print("no defense batch")
+			continue
+
+
 		for i in range(num_step):
 
 			#print('========perturbation iteration:',i)
@@ -154,6 +165,7 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 
 		img = torch.cat((img,data_))
 		result = torch.cat((result,perturbation))
+		print("defense batch")
 
 
 		#only do the first batch
@@ -165,7 +177,7 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 	print(result.shape)
 
 	#generating dataset
-	np.savez("celeba_5w_out.npz", images = img, out = result)
+	np.savez("celeba_out_rdm.npz", images = img, out = result)
 	
 	#out = torch.cat((out, torch.tensor(after_noise)))
 	#vutils.save_image(out, 'out1/test_epsilon_{}.png'.format(epsilon), normalize=False)
@@ -286,9 +298,9 @@ def main():
 	epsilon = args.epsilon
 	num_step = args.num_step
 	
-	#add_noise(classifier, inversion, device, celeb_loader, epsilon, num_step)
+	add_noise(classifier, inversion, device, celeb_loader, epsilon, num_step)
 	#inv_test2(inversion, device, face_loader)
-	inv_test(classifier, inversion, device, face_loader)
+	#inv_test(classifier, inversion, device, face_loader)
 
 if __name__ == '__main__':
 	main()

@@ -143,6 +143,13 @@ class CelebA_out(Dataset):
         self.data = data[:num]
         #self.labels = labels
         self.out = out[:num]
+
+        np.random.seed(777)
+        perm = np.arange(len(data))
+        np.random.shuffle(perm)
+        data = data[perm]
+        out = out[perm]
+
     
     def __len__(self):
         return len(self.data)
