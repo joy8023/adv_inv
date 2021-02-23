@@ -13,8 +13,8 @@ import torchvision.utils as vutils
 # Training settings
 parser = argparse.ArgumentParser(description='Adversarial Model Inversion Demo')
 parser.add_argument('--batch-size', type=int, default=128, metavar='')
-parser.add_argument('--test-batch-size', type=int, default=1000, metavar='')
-parser.add_argument('--epochs', type=int, default=100, metavar='')
+parser.add_argument('--test-batch-size', type=int, default=500, metavar='')
+parser.add_argument('--epochs', type=int, default=70, metavar='')
 parser.add_argument('--lr', type=float, default=0.01, metavar='')
 parser.add_argument('--momentum', type=float, default=0.5, metavar='')
 parser.add_argument('--no-cuda', action='store_true', default=False)
@@ -103,7 +103,7 @@ def main():
 
     # Load classifier
     #path = 'out/classifier.pth'
-    path = 'out/model_dict.pth'
+    path = 'model/model_dict.pth'
     #checkpoint = torch.load(path)
     try:
         checkpoint = torch.load(path)
@@ -135,8 +135,8 @@ def main():
                 'optimizer': optimizer.state_dict(),
                 'best_recon_loss': best_recon_loss
             }
-            torch.save(state, 'out/inversion.pth')
-            torch.save(inversion.state_dict(), 'out/inv_model_dict.pth')
+            torch.save(state, 'model/inversion.pth')
+            torch.save(inversion.state_dict(), 'model/inv_model_dict.pth')
             shutil.copyfile('out/recon_test1_{}.png'.format(epoch), 'out/best_test1.png')
             #shutil.copyfile('out/recon_test2_{}.png'.format(epoch), 'out/best_test2.png')
 
