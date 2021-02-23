@@ -29,7 +29,7 @@ parser.add_argument('--c', type=float, default=50.)
 parser.add_argument('--num_workers', type=int, default=1, metavar='')
 
 def train( inversion, log_interval, device, data_loader, optimizer, epoch):
-    classifier.eval()
+    #classifier.eval()
     inversion.train()
 
     for batch_idx, (data, out) in enumerate(data_loader):
@@ -54,7 +54,7 @@ def train( inversion, log_interval, device, data_loader, optimizer, epoch):
         torch.cuda.empty_cache()
 
 def test(inversion, device, data_loader, epoch, msg):
-    classifier.eval()
+    #classifier.eval()
     inversion.eval()
     mse_loss = 0
     plot = True
@@ -111,17 +111,11 @@ def main():
 
     # Load classifier
     #path = 'out/classifier.pth'
-    path = 'out/model_dict.pth'
+    path = 'model/model_dict.pth'
     '''
     try:
         checkpoint = torch.load(path)
         print(checkpoint)
-        '''
-        classifier.load_state_dict(checkpoint['model'])
-        epoch = checkpoint['epoch']
-        best_cl_acc = checkpoint['best_cl_acc']
-        print("=> loaded classifier checkpoint '{}' (epoch {}, acc {:.4f})".format(path, epoch, best_cl_acc))
-        '''
         classifier.load_state_dict(checkpoint)
     except:
         print("=> load classifier checkpoint '{}' failed".format(path))
@@ -144,8 +138,8 @@ def main():
                 'optimizer': optimizer.state_dict(),
                 'best_recon_loss': best_recon_loss
             }
-            torch.save(state, 'out/inversion_def.pth')
-            torch.save(inversion.state_dict(), 'out/inv_model_def_dict.pth')
+            torch.save(state, 'model/inversion_def.pth')
+            torch.save(inversion.state_dict(), 'model/inv_model_def_dict.pth')
             shutil.copyfile('out/recon_test1_def{}.png'.format(epoch), 'out/best_test1_def.png')
             #shutil.copyfile('out/recon_test2_{}.png'.format(epoch), 'out/best_test2.png')
 
