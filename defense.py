@@ -109,7 +109,7 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 
 		data = data_.to(device)
 		print('############batch:',batch_idx)
-		'''
+		
 		if batch_idx%2 == 1:
 			with torch.no_grad():
 				pred = classifier(data, release = True)
@@ -119,7 +119,6 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 			result = torch.cat((result,pred))
 			print("no defense batch")
 			continue
-		'''
 
 
 		for i in range(num_step):
@@ -178,7 +177,7 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 	print(result.shape)
 
 	#generating dataset
-	np.savez("celeba_def.npz", images = img, out = result)
+	np.savez("celeba_def_rdm.npz", images = img, out = result)
 	
 	#out = torch.cat((out, torch.tensor(after_noise)))
 	#vutils.save_image(out, 'out1/test_epsilon_{}.png'.format(epsilon), normalize=False)
