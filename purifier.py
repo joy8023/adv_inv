@@ -54,9 +54,9 @@ def train(purifier, classifier, inversion, device, data_loader,optimizier, epoch
 
 	alpha = 1
 	beta = 1
-	a = 1e-4
+	a = 1e-5
 	b = 1
-	c = 1e-1
+	c = 1
 	#optimizier = optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
 	#l2norm = nn.MSELoss()
 
@@ -115,7 +115,7 @@ def test(purifier, classifier, inversion, device, data_loader ):
 			recon_err += F.mse_loss(recon, data, reduction='sum').item()
 			test_loss += F.nll_loss(pred, target, reduction='sum').item()
 
-			label = target.max(1, keepdim=True)[1]
+			label = out.max(1, keepdim=True)[1]
 			correct += pred.eq(target.view_as(label)).sum().item()
 
 
@@ -159,11 +159,11 @@ def main():
 	inversion_path = 'model/inversion.pth'
 
 	
-	lr = 5e-4
-	weight_decay = 1e-5
+	#lr = 0.01
+	#weight_decay = 1e-5
 
-	optimizier = optim.Adam(purifier.parameters(), lr=lr, weight_decay=weight_decay)
-
+	#optimizier = optim.Adam(purifier.parameters(), lr=lr, weight_decay=weight_decay)
+	optimizier = optim.Adam(purifier.parameters(), lr=0.0002, betas=(0.5, 0.999), amsgrad=True))
 
 	try:
 		model_checkpoint = torch.load(model_path)
