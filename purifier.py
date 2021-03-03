@@ -29,6 +29,7 @@ parser.add_argument('--c', type=float, default=50.)
 parser.add_argument('--num_workers', type=int, default=1, metavar='')
 parser.add_argument('--no-cuda', action='store_true', default=False)
 parser.add_argument('--seed', type=int, default=1, metavar='')
+parser.add_argument('--log-interval', type=int, default=10, metavar='')
 #parser.add_argument('--epsilon', type = float, default = 10e-5, metavar = '')
 #parser.add_argument('--num_step', type = int, default = 10, metavar = '')
 
@@ -63,11 +64,11 @@ def train(purifier, classifier, inversion, device, data_loader,optimizier, epoch
 
 	for batch_idx, (data, target) in enumerate(data_loader):
 		data, target = data.to(device), target.to(device)
-		optimizer.zero_grad()
+		optimizier.zero_grad()
 
 
 		logit = classifier(data, release = False)
-		out = purifier(logit)
+		_, out = purifier(logit)
 		pred = F.softmax(out, dim=1)
 		recon = inversion(pred)
 
@@ -77,6 +78,10 @@ def train(purifier, classifier, inversion, device, data_loader,optimizier, epoch
 
 		loss.backward()
 		optimizier.step()
+		
+		if batch_idx % log_interval == 0:
+            print('Train Epoch: {} [{}/{}]\tLoss: {:.6f}'.format( epoch, batch_idx * len(data),
+                                                                  len(data_loader.dataset), loss.item()))
 	print("epoch=", epoch, loss.data.float())
 
 def test(purifier, classifier, inversion, device, data_loader ):
