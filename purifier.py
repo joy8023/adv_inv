@@ -54,7 +54,7 @@ def train(purifier, classifier, inversion, device, data_loader,optimizier, epoch
 
 	alpha = 1
 	beta = 1
-	a = 1e-3
+	a = 1e-4
 	b = 1
 	c = 1
 	#optimizier = optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
@@ -73,19 +73,19 @@ def train(purifier, classifier, inversion, device, data_loader,optimizier, epoch
 
 		diff = F.mse_loss(logit, out)
 		recon_err = F.mse_loss(recon, data)
-		test_loss = F.nll_loss(pred, target)
+		test_loss = F.nll_loss(F.log_softmax(out, dim = 1), target)
 
 		#loss = (F.mse_loss(logit,out)
 		#	+ alpha * F.nll_loss(pred, target)
 		#	- beta * F.mse_loss(recon, data))
-		loss = a * diff + b * recon_err + c * test_loss 
+		loss = a * diff - b * recon_err + c * test_loss 
 
 		loss.backward()
 		optimizier.step()
 
-		if batch_idx % log_interval == 0:
+		if batch_idx % 10 == 0:
 			print('Train Epoch: {} [{}/{}]\tLoss: {:.6f}'.format( epoch, batch_idx * len(data), len(data_loader.dataset), loss.item()))
-			print('diff:{:.6f}\trecon err:{:.6f}\ttest loss:{:.6f}'.format(device.item(),recon_err.item(),test_loss.item()))
+			print('diff:{:.6f}\trecon err:{:.6f}\ttest loss:{:.6f}'.format(diff.item(),recon_err.item(),test_loss.item()))
 	print("epoch=", epoch, loss.data.float())
 
 def test(purifier, classifier, inversion, device, data_loader ):
