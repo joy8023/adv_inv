@@ -3,7 +3,6 @@ import torch
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 from torchvision.utils import save_image
-import matplotlib.pyplot as plt
 import argparse
 import torch.nn as nn
 import torch.optim as optim
@@ -18,6 +17,7 @@ import numpy as np
 parser = argparse.ArgumentParser(description='defense against model inversion')
 parser.add_argument('--celeb-batch-size', type=int, default=128, metavar='')
 parser.add_argument('--face-batch-size', type=int, default=64, metavar='')
+parser.add_argument('--batch-size', type=int, default=128, metavar='')
 parser.add_argument('--epochs', type=int, default=50, metavar='')
 parser.add_argument('--nc', type=int, default=1)
 parser.add_argument('--ndf', type=int, default=128)
