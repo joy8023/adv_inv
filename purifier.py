@@ -56,7 +56,7 @@ def train(purifier, classifier, inversion, device, data_loader,optimizier, epoch
 	beta = 1
 	a = 1e-4
 	b = 1
-	c = 1
+	c = 1e-1
 	#optimizier = optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
 	#l2norm = nn.MSELoss()
 
@@ -83,9 +83,14 @@ def train(purifier, classifier, inversion, device, data_loader,optimizier, epoch
 		loss.backward()
 		optimizier.step()
 
+		label = target.max(1, keepdim=True)[1]
+		correct = pred.eq(target.view_as(label)).sum().item()
+
+
 		if batch_idx % 10 == 0:
 			print('Train Epoch: {} [{}/{}]\tLoss: {:.6f}'.format( epoch, batch_idx * len(data), len(data_loader.dataset), loss.item()))
 			print('diff:{:.6f}\trecon err:{:.6f}\ttest loss:{:.6f}'.format(diff.item(),recon_err.item(),test_loss.item()))
+			print(correct)
 	print("epoch=", epoch, loss.data.float())
 
 def test(purifier, classifier, inversion, device, data_loader ):
@@ -110,7 +115,7 @@ def test(purifier, classifier, inversion, device, data_loader ):
 			recon_err += F.mse_loss(recon, data, reduction='sum').item()
 			test_loss += F.nll_loss(pred, target, reduction='sum').item()
 
-			label = output.max(1, keepdim=True)[1]
+			label = target.max(1, keepdim=True)[1]
 			correct += pred.eq(target.view_as(label)).sum().item()
 
 
