@@ -35,10 +35,11 @@ class Purifier(nn.Module):
 		super(Purifier, self).__init__()
 
 		self.encoder = nn.Sequential(nn.Linear(530, 200),
+									#nn.BatchNorm1d(num_features=200),
 									 nn.ReLU(True))
 
 		self.decoder = nn.Sequential(nn.Linear(200, 530),
-									 nn.ReLU(True),
+									#nn.BatchNorm1d(num_features=530),
 									 nn.Sigmoid())
 								
 	def forward(self, x):
@@ -166,7 +167,7 @@ def main():
 	#optimizier = optim.Adam(purifier.parameters(), lr=lr, weight_decay=weight_decay)
 	optimizier = optim.Adam(purifier.parameters(), lr=0.0002, betas=(0.5, 0.999), amsgrad=True)
 
-	try
+	try:
 		model_checkpoint = torch.load(model_path)
 		classifier.load_state_dict(model_checkpoint)
 
