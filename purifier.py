@@ -15,9 +15,10 @@ import torchvision.utils as vutils
 import numpy as np
 
 parser = argparse.ArgumentParser(description='defense against model inversion')
-parser.add_argument('--celeb-batch-size', type=int, default=128, metavar='')
-parser.add_argument('--face-batch-size', type=int, default=64, metavar='')
+#parser.add_argument('--celeb-batch-size', type=int, default=128, metavar='')
+#parser.add_argument('--face-batch-size', type=int, default=64, metavar='')
 parser.add_argument('--batch-size', type=int, default=128, metavar='')
+parser.add_argument('--test-batch-size', type=int, default=1000, metavar='')
 parser.add_argument('--epochs', type=int, default=50, metavar='')
 parser.add_argument('--nc', type=int, default=1)
 parser.add_argument('--ndf', type=int, default=128)
@@ -28,8 +29,8 @@ parser.add_argument('--c', type=float, default=50.)
 parser.add_argument('--num_workers', type=int, default=1, metavar='')
 parser.add_argument('--no-cuda', action='store_true', default=False)
 parser.add_argument('--seed', type=int, default=1, metavar='')
-parser.add_argument('--epsilon', type = float, default = 10e-5, metavar = '')
-parser.add_argument('--num_step', type = int, default = 10, metavar = '')
+#parser.add_argument('--epsilon', type = float, default = 10e-5, metavar = '')
+#parser.add_argument('--num_step', type = int, default = 10, metavar = '')
 
 
 class Purifier(nn.Module):
