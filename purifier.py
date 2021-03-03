@@ -76,8 +76,7 @@ def train(purifier, classifier, inversion, device, data_loader,optimizier, epoch
 		optimizier.step()
 
 		if batch_idx % log_interval == 0:
-            print('Train Epoch: {} [{}/{}]\tLoss: {:.6f}'.format( epoch, batch_idx * len(data),
-                                                                  len(data_loader.dataset), loss.item()))
+			print('Train Epoch: {} [{}/{}]\tLoss: {:.6f}'.format( epoch, batch_idx * len(data), len(data_loader.dataset), loss.item()))
 	print("epoch=", epoch, loss.data.float())
 
 def test(purifier, classifier, inversion, device, data_loader ):
