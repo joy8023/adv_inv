@@ -1,10 +1,9 @@
+from __future__ import print_function
 import torch
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 from torchvision.utils import save_image
 import matplotlib.pyplot as plt
-
-from __future__ import print_function
 import argparse
 import torch.nn as nn
 import torch.optim as optim
@@ -66,14 +65,14 @@ def train(purifier, classifier, inversion, device, data_loader,optimizier, epoch
 		optimizer.zero_grad()
 
 
-		logit = classifier(data，release = False)
+		logit = classifier(data, release = False)
 		out = purifier(logit)
 		pred = F.softmax(out, dim=1)
 		recon = inversion(pred)
 
-		loss = F.mse_loss(logit,out)
-				+alpha * F.nll_loss(pred, target)
-				- beta * F.mse_loss(recon, data)
+		loss = (F.mse_loss(logit,out)
+			+ alpha * F.nll_loss(pred, target)
+			- beta * F.mse_loss(recon, data))
 
 		loss.backward()
 		optimizier.step()
