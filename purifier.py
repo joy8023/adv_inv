@@ -93,7 +93,7 @@ def test(purifier, classifier, inversion, device, data_loader ):
 		for data, target in data_loader:
 			data, target = data.to(device), target.to(device)
 
-			logit = classifier(data，release = False)
+			logit = classifier(data, release = False)
 			out = purifier(logit)
 			pred = F.softmax(out, dim=1)
 			recon = inversion(pred)
