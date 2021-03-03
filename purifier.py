@@ -15,8 +15,6 @@ import torchvision.utils as vutils
 import numpy as np
 
 parser = argparse.ArgumentParser(description='defense against model inversion')
-#parser.add_argument('--celeb-batch-size', type=int, default=128, metavar='')
-#parser.add_argument('--face-batch-size', type=int, default=64, metavar='')
 parser.add_argument('--batch-size', type=int, default=128, metavar='')
 parser.add_argument('--test-batch-size', type=int, default=1000, metavar='')
 parser.add_argument('--epochs', type=int, default=50, metavar='')
@@ -30,8 +28,6 @@ parser.add_argument('--num_workers', type=int, default=1, metavar='')
 parser.add_argument('--no-cuda', action='store_true', default=False)
 parser.add_argument('--seed', type=int, default=1, metavar='')
 parser.add_argument('--log-interval', type=int, default=10, metavar='')
-#parser.add_argument('--epsilon', type = float, default = 10e-5, metavar = '')
-#parser.add_argument('--num_step', type = int, default = 10, metavar = '')
 
 
 class Purifier(nn.Module):
@@ -78,7 +74,7 @@ def train(purifier, classifier, inversion, device, data_loader,optimizier, epoch
 
 		loss.backward()
 		optimizier.step()
-		
+
 		if batch_idx % log_interval == 0:
             print('Train Epoch: {} [{}/{}]\tLoss: {:.6f}'.format( epoch, batch_idx * len(data),
                                                                   len(data_loader.dataset), loss.item()))
@@ -148,7 +144,7 @@ def main():
 	purifier = nn.DataParallel(Purifier()).to(device)
 	model_path = 'model/model_dict.pth'
 	inversion_path = 'model/inversion.pth'
-	#inversion_path = 'out/inversion_def.pth'
+
 	
 	lr = 5e-4
 	weight_decay = 1e-5
@@ -158,7 +154,6 @@ def main():
 
 	try:
 		model_checkpoint = torch.load(model_path)
-		#print(model_checkpoint)
 		classifier.load_state_dict(model_checkpoint)
 
 	except:
@@ -167,7 +162,6 @@ def main():
 
 	try:
 		inv_checkpoint = torch.load(inversion_path)
-		#print(inv_checkpoint)
 		inversion.load_state_dict(inv_checkpoint['model'])
 	except:
 		print("=> load classifier checkpoint '{}' failed".format(inversion_path))
