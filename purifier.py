@@ -38,7 +38,8 @@ class Purifier(nn.Module):
 									 nn.ReLU(True))
 
 		self.decoder = nn.Sequential(nn.Linear(200, 530),
-									 nn.ReLU(True))
+									 nn.ReLU(True),
+									 nn.Sigmoid())
 								
 	def forward(self, x):
 		encode = self.encoder(x)
@@ -54,7 +55,7 @@ def train(purifier, classifier, inversion, device, data_loader,optimizier, epoch
 
 	alpha = 1
 	beta = 1
-	a = 1e-5
+	a = 1e-2
 	b = 1
 	c = 1
 	#optimizier = optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
@@ -83,7 +84,7 @@ def train(purifier, classifier, inversion, device, data_loader,optimizier, epoch
 		loss.backward()
 		optimizier.step()
 
-		label = target.max(1, keepdim=True)[1]
+		label = out.max(1, keepdim=True)[1]
 		correct = pred.eq(target.view_as(label)).sum().item()
 
 
@@ -163,9 +164,9 @@ def main():
 	#weight_decay = 1e-5
 
 	#optimizier = optim.Adam(purifier.parameters(), lr=lr, weight_decay=weight_decay)
-	optimizier = optim.Adam(purifier.parameters(), lr=0.0002, betas=(0.5, 0.999), amsgrad=True))
+	optimizier = optim.Adam(purifier.parameters(), lr=0.0002, betas=(0.5, 0.999), amsgrad=True)
 
-	try:
+	try
 		model_checkpoint = torch.load(model_path)
 		classifier.load_state_dict(model_checkpoint)
 
