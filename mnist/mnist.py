@@ -7,6 +7,7 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.optim.lr_scheduler import StepLR
 
+import urllib
 
 class Net(nn.Module):
     def __init__(self):
@@ -18,7 +19,7 @@ class Net(nn.Module):
         self.fc1 = nn.Linear(9216, 128)
         self.fc2 = nn.Linear(128, 10)
 
-    def forward(self, x):
+    def forward(self, x, logit = False):
         x = self.conv1(x)
         x = F.relu(x)
         x = self.conv2(x)
@@ -31,7 +32,47 @@ class Net(nn.Module):
         x = self.dropout2(x)
         x = self.fc2(x)
         output = F.log_softmax(x, dim=1)
-        return output
+
+        if release:
+            return x
+        else:
+            return output
+
+class Inversion(nn.Module):
+    def __init__(self):
+        super(Inversion, self).__init__()
+
+
+        self.decoder = nn.Sequential(
+            # input is Z
+            nn.ConvTranspose2d(10, 512, 4, 1, 0),
+            nn.BatchNorm2d(512),
+            nn.Tanh(),
+            # state size. (ngf*8) x 4 x 4
+            nn.ConvTranspose2d(512, 256, 4, 2, 1),
+            nn.BatchNorm2d(256),
+            nn.Tanh(),
+            # state size. (ngf*4) x 8 x 8
+            nn.ConvTranspose2d(256, 128, 4, 2, 1),
+            nn.BatchNorm2d(128),
+            nn.Tanh(),
+            # state size. (ngf*2) x 16 x 16
+            nn.ConvTranspose2d(128, 1, 4, 2, 1),
+            nn.Sigmoid()
+            # state size. (nc) x 64 x 64
+        )
+
+    def forward(self, x):
+        topk, indices = torch.topk(x)
+        topk = torch.clamp(torch.log(topk), min=-1000) 
+        topk_min = topk.min(1, keepdim=True)[0]
+        topk = topk + F.relu(-topk_min)
+        x = torch.zeros(len(x), 10).cuda().scatter_(1, indices, topk)
+
+        x = x.view(-1, 10, 1, 1)
+        x = self.decoder(x)
+        x = x.view(-1, 1, 28, 28)
+        return x
 
 
 def train(args, model, device, train_loader, optimizer, epoch):
@@ -91,7 +132,7 @@ def main():
                         help='random seed (default: 1)')
     parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                         help='how many batches to wait before logging training status')
-    parser.add_argument('--save-model', action='store_true', default=False,
+    parser.add_argument('--save-model', action='store_true', default=True,
                         help='For Saving the current Model')
     args = parser.parse_args()
     use_cuda = not args.no_cuda and torch.cuda.is_available()
@@ -113,9 +154,10 @@ def main():
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,))
         ])
-    dataset1 = datasets.MNIST('../data', train=True, download=True,
+
+    dataset1 = datasets.QMNIST('../data', train=True, download=True,
                        transform=transform)
-    dataset2 = datasets.MNIST('../data', train=False,
+    dataset2 = datasets.QMNIST('../data', train=False,
                        transform=transform)
     train_loader = torch.utils.data.DataLoader(dataset1,**train_kwargs)
     test_loader = torch.utils.data.DataLoader(dataset2, **test_kwargs)
