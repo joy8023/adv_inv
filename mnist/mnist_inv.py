@@ -109,7 +109,7 @@ def main():
 
     # Load classifier
     #path = 'out/classifier.pth'
-    path = 'mnist_cnn.pt'
+    path = 'model/mnist_cnn.pth'
     #checkpoint = torch.load(path)
     try:
         checkpoint = torch.load(path)
