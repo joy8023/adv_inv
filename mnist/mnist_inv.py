@@ -37,8 +37,11 @@ def train(classifier, inversion, log_interval, device, data_loader, optimizer, e
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
         with torch.no_grad():
-            prediction = classifier(data, release=True)
+            prediction = classifier(data)
         reconstruction = inversion(prediction)
+
+        print(reconstruction.item())
+        print(data.item())
         loss = F.mse_loss(reconstruction, data)
         loss.backward()
         optimizer.step()
@@ -46,6 +49,7 @@ def train(classifier, inversion, log_interval, device, data_loader, optimizer, e
         if batch_idx % log_interval == 0:
             print('Train Epoch: {} [{}/{}]\tLoss: {:.6f}'.format( epoch, batch_idx * len(data),
                                                                   len(data_loader.dataset), loss.item()))
+        return
 
 def test(classifier, inversion, device, data_loader, epoch, msg):
     classifier.eval()
@@ -56,7 +60,7 @@ def test(classifier, inversion, device, data_loader, epoch, msg):
         for data, target in data_loader:
             data, target = data.to(device), target.to(device)
 
-            prediction = classifier(data, release=True)
+            prediction = classifier(data)
             reconstruction = inversion(prediction)
             mse_loss += F.mse_loss(reconstruction, data, reduction='sum').item()
 
