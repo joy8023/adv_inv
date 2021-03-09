@@ -12,6 +12,7 @@ import urllib
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
+
         self.conv1 = nn.Conv2d(1, 32, 3, 1)
         self.conv2 = nn.Conv2d(32, 64, 3, 1)
         self.dropout1 = nn.Dropout(0.25)
@@ -33,7 +34,7 @@ class Net(nn.Module):
         x = self.fc2(x)
         output = F.log_softmax(x, dim=1)
 
-        if release:
+        if logit:
             return x
         else:
             return output
@@ -118,7 +119,7 @@ def main():
                         help='input batch size for training (default: 64)')
     parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
                         help='input batch size for testing (default: 1000)')
-    parser.add_argument('--epochs', type=int, default=14, metavar='N',
+    parser.add_argument('--epochs', type=int, default=2, metavar='N',
                         help='number of epochs to train (default: 14)')
     parser.add_argument('--lr', type=float, default=1.0, metavar='LR',
                         help='learning rate (default: 1.0)')
@@ -162,7 +163,8 @@ def main():
     train_loader = torch.utils.data.DataLoader(dataset1,**train_kwargs)
     test_loader = torch.utils.data.DataLoader(dataset2, **test_kwargs)
 
-    model = nn.DataParallel(Net()).to(device)
+    model = Net().to(device)
+    model2 = Net().to(device)
     optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
 
     scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
@@ -171,14 +173,14 @@ def main():
         test(model, device, test_loader)
         scheduler.step()
 
-    if args.save_model:
-        torch.save(model.state_dict(), "model/mnist_cnn.pth")
-        try:
+    
+    torch.save(model.state_dict(), "model/mnist_cnn.pth")
+    try:
 
-            model.load_state_dict("model/mnist_cnn.pth")
-        except:
-            print("=> load classifier checkpoint failed")
-            return
+        model2.load_state_dict("model/mnist_cnn.pth")
+    except:
+        print("=> load classifier checkpoint failed")
+        return
 
 
 
