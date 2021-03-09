@@ -46,25 +46,25 @@ class Inversion(nn.Module):
 
         self.decoder = nn.Sequential(
             # input is Z
-            nn.ConvTranspose2d(10, 512, 4, 1, 0),
-            nn.BatchNorm2d(512),
-            nn.Tanh(),
-            # state size. (ngf*8) x 4 x 4
-            nn.ConvTranspose2d(512, 256, 4, 2, 1),
-            nn.BatchNorm2d(256),
-            nn.Tanh(),
-            # state size. (ngf*4) x 8 x 8
-            nn.ConvTranspose2d(256, 128, 4, 2, 1),
+            nn.ConvTranspose2d(10, 128, 3, 1),
             nn.BatchNorm2d(128),
             nn.Tanh(),
+            # state size. (ngf*8) x 4 x 4
+            nn.ConvTranspose2d(128, 64, 2, 2),
+            nn.BatchNorm2d(64),
+            nn.Tanh(),
+            # state size. (ngf*4) x 8 x 8
+            nn.ConvTranspose2d(64, 32, 3, 2),
+            nn.BatchNorm2d(32),
+            nn.Tanh(),
             # state size. (ngf*2) x 16 x 16
-            nn.ConvTranspose2d(128, 1, 4, 2, 1),
+            nn.ConvTranspose2d(32, 1, 4, 2),
             nn.Sigmoid()
             # state size. (nc) x 64 x 64
         )
 
     def forward(self, x):
-        topk, indices = torch.topk(x)
+        topk, indices = torch.topk(x, 10)
         topk = torch.clamp(torch.log(topk), min=-1000) 
         topk_min = topk.min(1, keepdim=True)[0]
         topk = topk + F.relu(-topk_min)
