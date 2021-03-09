@@ -162,7 +162,7 @@ def main():
     train_loader = torch.utils.data.DataLoader(dataset1,**train_kwargs)
     test_loader = torch.utils.data.DataLoader(dataset2, **test_kwargs)
 
-    model = Net().to(device)
+    model = nn.DataParallel(Net()).to(device)
     optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
 
     scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
@@ -172,7 +172,15 @@ def main():
         scheduler.step()
 
     if args.save_model:
-        torch.save(model.state_dict(), "mnist_cnn.pt")
+        torch.save(model.state_dict(), "model/mnist_cnn.pth")
+        try:
+
+            model.load_state_dict("model/mnist_cnn.pth")
+        except:
+            print("=> load classifier checkpoint failed")
+            return
+
+
 
 
 if __name__ == '__main__':

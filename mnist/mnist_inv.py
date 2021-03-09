@@ -93,14 +93,14 @@ def main():
     #test1_set = FaceScrub('./facescrub.npz', transform=transform, train=False)
     # Inversion attack on TEST data of facescrub classifier
     #test2_set = FaceScrub('./facescrub.npz', transform=transform, train=False)
-    dataset1 = QMNIST('../data', train=True, download=True,
+    train_set = datasets.QMNIST('../data', train=True, download=True,
                        transform=transform)
-    dataset2 = QMNIST('../data', train=False,
+    test_set = datasets.QMNIST('../data', train=False, download=True,
                        transform=transform)
     #train_loader = torch.utils.data.DataLoader(dataset1,**train_kwargs)
     #test_loader = torch.utils.data.DataLoader(dataset2, **test_kwargs)
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True, **kwargs)
-    test1_loader = torch.utils.data.DataLoader(test1_set, batch_size=args.test_batch_size, shuffle=False, **kwargs)
+    test1_loader = torch.utils.data.DataLoader(test_set, batch_size=args.test_batch_size, shuffle=False, **kwargs)
     #test2_loader = torch.utils.data.DataLoader(test2_set, batch_size=args.test_batch_size, shuffle=False, **kwargs)
 
     classifier = nn.DataParallel(Net()).to(device)
