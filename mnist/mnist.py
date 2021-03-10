@@ -32,12 +32,14 @@ class Net(nn.Module):
         x = F.relu(x)
         x = self.dropout2(x)
         x = self.fc2(x)
-        output = F.log_softmax(x, dim=1)
+        #output = F.log_softmax(x, dim=1)
 
         if logit:
+            #return F.log_softmax(x, dim=1)
             return x
+            
         else:
-            return output
+            return F.softmax(x, dim=1)
 
 class Inversion(nn.Module):
     def __init__(self):
