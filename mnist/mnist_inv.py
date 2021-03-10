@@ -13,9 +13,9 @@ from mnist import Net, Inversion
 
 # Training settings
 parser = argparse.ArgumentParser(description='Adversarial Model Inversion Demo')
-parser.add_argument('--batch-size', type=int, default=128, metavar='')
-parser.add_argument('--test-batch-size', type=int, default=500, metavar='')
-parser.add_argument('--epochs', type=int, default=50, metavar='')
+parser.add_argument('--batch-size', type=int, default=256, metavar='')
+parser.add_argument('--test-batch-size', type=int, default=1000, metavar='')
+parser.add_argument('--epochs', type=int, default=20, metavar='')
 parser.add_argument('--lr', type=float, default=0.01, metavar='')
 parser.add_argument('--momentum', type=float, default=0.5, metavar='')
 parser.add_argument('--no-cuda', action='store_true', default=False)
@@ -132,7 +132,7 @@ def main():
         recon_loss = test(classifier, inversion, device, test1_loader, epoch, 'test1')
         #test(classifier, inversion, device, test2_loader, epoch, 'test2')
 
-        break
+        #break
         if recon_loss < best_recon_loss:
             best_recon_loss = recon_loss
             state = {
@@ -142,7 +142,7 @@ def main():
                 'best_recon_loss': best_recon_loss
             }
             #torch.save(state, 'model/inversion.pth')
-            torch.save(inversion.state_dict(), 'model/inv_model_dict.pt')
+            torch.save(inversion.state_dict(), 'model/mnist_inv.pth')
             shutil.copyfile('out/recon_test1_{}.png'.format(epoch), 'out/best_test1.png')
             #shutil.copyfile('out/recon_test2_{}.png'.format(epoch), 'out/best_test2.png')
 
