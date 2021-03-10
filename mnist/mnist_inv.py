@@ -33,10 +33,10 @@ def train(classifier, inversion, log_interval, device, data_loader, optimizer, e
         optimizer.zero_grad()
         with torch.no_grad():
             prediction = classifier(data)
+        print(prediction)
         reconstruction = inversion(prediction)
-
-        print(reconstruction.item())
-        print(data.item())
+        print(reconstruction)
+        #print(data)
         loss = F.mse_loss(reconstruction, data)
         loss.backward()
         optimizer.step()
@@ -44,7 +44,7 @@ def train(classifier, inversion, log_interval, device, data_loader, optimizer, e
         if batch_idx % log_interval == 0:
             print('Train Epoch: {} [{}/{}]\tLoss: {:.6f}'.format( epoch, batch_idx * len(data),
                                                                   len(data_loader.dataset), loss.item()))
-        return
+    
 
 def test(classifier, inversion, device, data_loader, epoch, msg):
     classifier.eval()
@@ -92,9 +92,9 @@ def main():
     #test1_set = FaceScrub('./facescrub.npz', transform=transform, train=False)
     # Inversion attack on TEST data of facescrub classifier
     #test2_set = FaceScrub('./facescrub.npz', transform=transform, train=False)
-    train_set = datasets.QMNIST('../data', train=True, download=True,
+    train_set = datasets.MNIST('../data', train=True, download=True,
                        transform=transform)
-    test_set = datasets.QMNIST('../data', train=False, download=True,
+    test_set = datasets.MNIST('../data', train=False, download=True,
                        transform=transform)
     #train_loader = torch.utils.data.DataLoader(dataset1,**train_kwargs)
     #test_loader = torch.utils.data.DataLoader(dataset2, **test_kwargs)
@@ -112,7 +112,7 @@ def main():
     #checkpoint = torch.load(path)
     try:
         checkpoint = torch.load(path)
-        print(checkpoint)
+        #print(checkpoint)
         '''
         classifier.load_state_dict(checkpoint['model'])
         epoch = checkpoint['epoch']
@@ -132,6 +132,7 @@ def main():
         recon_loss = test(classifier, inversion, device, test1_loader, epoch, 'test1')
         #test(classifier, inversion, device, test2_loader, epoch, 'test2')
 
+        break
         if recon_loss < best_recon_loss:
             best_recon_loss = recon_loss
             state = {

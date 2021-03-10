@@ -65,12 +65,13 @@ class Inversion(nn.Module):
 
     def forward(self, x):
         topk, indices = torch.topk(x, 10)
-        topk = torch.clamp(torch.log(topk), min=-1000) 
+        topk = torch.clamp(torch.log(topk), min=-1000) + 50.0
         topk_min = topk.min(1, keepdim=True)[0]
         topk = topk + F.relu(-topk_min)
         x = torch.zeros(len(x), 10).cuda().scatter_(1, indices, topk)
 
         x = x.view(-1, 10, 1, 1)
+        #print(x)
         x = self.decoder(x)
         x = x.view(-1, 1, 28, 28)
         return x
@@ -82,6 +83,7 @@ def train(args, model, device, train_loader, optimizer, epoch):
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
         output = model(data)
+
         loss = F.nll_loss(output, target)
         loss.backward()
         optimizer.step()
