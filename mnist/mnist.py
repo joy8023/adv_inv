@@ -8,6 +8,7 @@ from torchvision import datasets, transforms
 from torch.optim.lr_scheduler import StepLR
 
 import urllib
+from mine.models.mine import Mine
 
 class Net(nn.Module):
     def __init__(self):
@@ -77,6 +78,27 @@ class Inversion(nn.Module):
         x = self.decoder(x)
         x = x.view(-1, 1, 28, 28)
         return x
+
+
+def train_mi(mine, args, model, device, train_loader, optimizer, epoch):
+    model.train()
+    for batch_idx, (data, target) in enumerate(train_loader):
+        data, target = data.to(device), target.to(device)
+        optimizer.zero_grad()
+        output = model(data)
+
+        mi = mine.optimize(data, output, iters = 10)
+
+        loss = F.nll_loss(output, target) + mi
+
+        loss.backward()
+        optimizer.step()
+        if batch_idx % args.log_interval == 0:
+            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                epoch, batch_idx * len(data), len(train_loader.dataset),
+                100. * batch_idx / len(train_loader), loss.item()))
+            if args.dry_run:
+                break
 
 
 def train(args, model, device, train_loader, optimizer, epoch):
@@ -171,9 +193,23 @@ def main():
     model2 = nn.DataParallel(Net()).to(device)
     optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
 
+    #code for mutual info
+    statistics_network = nn.Sequential(
+                        nn.Linear(28*28+ 10, 100),
+                        nn.ReLU(),
+                        nn.Linear(100, 100),
+                        nn.ReLU(),
+                        nn.Linear(100, 1))
+
+    mine = Mine(T = statistics_network,
+                loss = 'mine', #mine_biased, fdiv
+                method = 'concat')
+
+
     scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
     for epoch in range(1, args.epochs + 1):
-        train(args, model, device, train_loader, optimizer, epoch)
+        train_mi(mine, args, model, device, train_loader, optimizer, epoch)
+        #train(args, model, device, train_loader, optimizer, epoch)
         test(model, device, test_loader)
         scheduler.step()
 
