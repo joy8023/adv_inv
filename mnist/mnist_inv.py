@@ -33,9 +33,9 @@ def train(classifier, inversion, log_interval, device, data_loader, optimizer, e
         optimizer.zero_grad()
         with torch.no_grad():
             prediction = classifier(data)
-        print(prediction)
+        #print(prediction)
         reconstruction = inversion(prediction)
-        print(reconstruction)
+        #print(reconstruction)
         #print(data)
         loss = F.mse_loss(reconstruction, data)
         loss.backward()
@@ -92,9 +92,9 @@ def main():
     #test1_set = FaceScrub('./facescrub.npz', transform=transform, train=False)
     # Inversion attack on TEST data of facescrub classifier
     #test2_set = FaceScrub('./facescrub.npz', transform=transform, train=False)
-    train_set = datasets.MNIST('../data', train=True, download=True,
+    train_set = datasets.QMNIST('../data', train=True, download=True,
                        transform=transform)
-    test_set = datasets.MNIST('../data', train=False, download=True,
+    test_set = datasets.QMNIST('../data', train=False, download=True,
                        transform=transform)
     #train_loader = torch.utils.data.DataLoader(dataset1,**train_kwargs)
     #test_loader = torch.utils.data.DataLoader(dataset2, **test_kwargs)
