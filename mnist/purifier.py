@@ -146,12 +146,12 @@ def main():
 	transform = transforms.Compose([transforms.ToTensor()])
 
 	train_set = datasets.QMNIST('../data', train=True, download=True,
-                       transform=transform)
-    test_set = datasets.QMNIST('../data', train=False, download=True,
-                       transform=transform)
+					transform=transform)
+	test_set = datasets.QMNIST('../data', train=False, download=True,
+					transform=transform)
 
-    train_loader = torch.utils.data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True, **kwargs)
-    test1_loader = torch.utils.data.DataLoader(test_set, batch_size=args.test_batch_size, shuffle=False, **kwargs)
+	train_loader = torch.utils.data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True, **kwargs)
+	test1_loader = torch.utils.data.DataLoader(test_set, batch_size=args.test_batch_size, shuffle=False, **kwargs)
 
 	#train_set = FaceScrub('./facescrub.npz', transform=transform, train=True)
 	#test_set = FaceScrub('./facescrub.npz', transform=transform, train=False)
