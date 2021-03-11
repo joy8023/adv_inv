@@ -104,7 +104,7 @@ def train_mi(mine, args, model, device, train_loader, optimizer, epoch):
         output = model(data)
         #iter = 10
         #temp = torch.cat()
-        mi = mine.optimize(data.view(-1,28*28), output, 10, args.batch_size)
+        mi = mine.optimize(data.view(-1,28*28), output, 5, args.batch_size)
 
         loss = F.nll_loss(output, target) + 0.1 * mi
 
@@ -158,7 +158,7 @@ def test(model, device, test_loader):
 def main():
     # Training settings
     parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
-    parser.add_argument('--batch-size', type=int, default=128, metavar='N',
+    parser.add_argument('--batch-size', type=int, default=256, metavar='N',
                         help='input batch size for training (default: 64)')
     parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
                         help='input batch size for testing (default: 1000)')
@@ -218,29 +218,27 @@ def main():
                         nn.ReLU(),
                         nn.Linear(100, 1))
 
-    mine = Mine(T = statistics_network,
-                loss = 'mine', #mine_biased, fdiv
-                method = 'concat').to(device)
-
 
     scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
     for epoch in range(1, args.epochs + 1):
+        mine = Mine(T = statistics_network,
+                loss = 'mine', #mine_biased, fdiv
+                method = 'concat').to(device)
         train_mi(mine, args, model, device, train_loader, optimizer, epoch)
         #train(args, model, device, train_loader, optimizer, epoch)
         test(model, device, test_loader)
         scheduler.step()
 
     
-    #torch.save(model.state_dict(), "model/mnist_cnn.pth")
+    torch.save(model.state_dict(), "model/mnist_mi.pth")
+    '''
     try:
         model_checkpoint = torch.load("model/mnist_cnn.pth")
         model2.load_state_dict(model_checkpoint)
     except:
         print("=> load classifier checkpoint failed")
         return
-
-
-
+    '''
 
 if __name__ == '__main__':
     main()
