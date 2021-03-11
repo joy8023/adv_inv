@@ -11,7 +11,7 @@ from torchvision import datasets, transforms
 import os, shutil
 import torch.nn.functional as F
 import torchvision.utils as vutils
-from mnist import Net, Inversion
+from mnist import Net, Inversion, test
 import numpy as np
 
 
@@ -83,10 +83,10 @@ def train(purifier, classifier, inversion, device, data_loader,optimizier, epoch
 		loss.backward()
 		optimizier.step()
 
-		label1 = logit.max(1, keepdim=True)[1]
+		label1 = logit.argmax(dim=1, keepdim=True)
 		correct1 = pred.eq(target.view_as(label1)).sum().item()
 
-		label = out.max(1, keepdim=True)[1]
+		label = out.argmax(dim=1, keepdim=True)
 		correct = pred.eq(target.view_as(label)).sum().item()
 
 
@@ -148,9 +148,9 @@ def main():
 
 	transform = transforms.Compose([transforms.ToTensor()])
 
-	train_set = datasets.QMNIST('../data', train=True, download=True,
+	train_set = datasets.MNIST('../data', train=True, download=True,
 					transform=transform)
-	test_set = datasets.QMNIST('../data', train=False, download=True,
+	test_set = datasets.MNIST('../data', train=False, download=True,
 					transform=transform)
 
 	train_loader = torch.utils.data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True, **kwargs)
@@ -193,6 +193,8 @@ def main():
 
 	best_acc = 0
 	best_epoch = 0
+	test(classifier, device, train_loader)
+	return
 	for epoch in range(1, args.epochs + 1):
 		train(purifier, classifier, inversion, device, train_loader,optimizier, epoch)
 		#test(purifier, classifier, inversion, device, data_loader )
