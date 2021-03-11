@@ -97,7 +97,7 @@ def train_mi(mine, args, model, device, train_loader, optimizer, epoch):
         optimizer.zero_grad()
         output = model(data)
         #iter = 10
-        temp = torch.cat()
+        #temp = torch.cat()
         mi = mine.optimize(data.view(-1,28*28), output, 10, args.batch_size)
 
         loss = F.nll_loss(output, target) + mi
@@ -206,7 +206,6 @@ def main():
 
     #code for mutual info
     statistics_network = nn.Sequential(
-                        ConcatLayer(),
                         nn.Linear(28*28 + 10, 100),
                         nn.ReLU(),
                         nn.Linear(100, 100),
@@ -214,8 +213,8 @@ def main():
                         nn.Linear(100, 1))
 
     mine = Mine(T = statistics_network,
-                loss = 'mine') #mine_biased, fdiv
-                #method = 'concat')
+                loss = 'mine', #mine_biased, fdiv
+                method = 'concat')
 
 
     scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
