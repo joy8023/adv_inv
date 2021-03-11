@@ -102,10 +102,10 @@ def train(purifier, classifier, inversion, device, data_loader,optimizier, epoch
 		optimizier.step()
 
 		label1 = logit.argmax(dim=1, keepdim=True)
-		correct1 = pred.eq(target.view_as(label1)).sum().item()
+		correct1 = label1.eq(target.view_as(label1)).sum().item()
 
 		label = out.argmax(dim=1, keepdim=True)
-		correct = pred.eq(target.view_as(label)).sum().item()
+		correct = label.eq(target.view_as(label)).sum().item()
 
 
 		if batch_idx % 10 == 0:
@@ -212,8 +212,8 @@ def main():
 	best_acc = 0
 	best_epoch = 0
 
-	old_test(classifier, device, train_loader)
-	return
+	#old_test(classifier, device, train_loader)
+	#return
 	for epoch in range(1, args.epochs + 1):
 		train(purifier, classifier, inversion, device, train_loader,optimizier, epoch)
 		#test(purifier, classifier, inversion, device, data_loader )
