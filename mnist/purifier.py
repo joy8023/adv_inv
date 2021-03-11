@@ -158,9 +158,10 @@ def main():
 
 	#train_loader = torch.utils.data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True, **kwargs)
 	#test_loader = torch.utils.data.DataLoader(test_set, batch_size=args.test_batch_size, shuffle=False, **kwargs)
-
-	classifier = nn.DataParallel(Classifier(nc=args.nc, ndf=args.ndf, nz=args.nz)).to(device)
-	inversion = nn.DataParallel(Inversion(nc=args.nc, ngf=args.ngf, nz=args.nz, truncation=args.truncation, c=args.c)).to(device)
+    classifier = nn.DataParallel(Net()).to(device)
+    inversion = nn.DataParallel(Inversion()).to(device)
+	#classifier = nn.DataParallel(Ne(nc=args.nc, ndf=args.ndf, nz=args.nz)).to(device)
+	#inversion = nn.DataParallel(Inversion(nc=args.nc, ngf=args.ngf, nz=args.nz, truncation=args.truncation, c=args.c)).to(device)
 	purifier = nn.DataParallel(Purifier()).to(device)
 	model_path = 'model/mnist_cnn.pth'
 	inversion_path = 'model/mnist_inv.pth'
