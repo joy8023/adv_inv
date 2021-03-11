@@ -143,7 +143,7 @@ def main():
             }
             #torch.save(state, 'model/inversion.pth')
             torch.save(inversion.state_dict(), 'model/mnist_mi_inv.pth')
-            shutil.copyfile('out/recon_test1_{}.png'.format(epoch), 'out/best_test1_mi.png')
+            shutil.copyfile('out/recon_test1_{}.png'.format(epoch), 'out/best_test_mi.png')
             #shutil.copyfile('out/recon_test2_{}.png'.format(epoch), 'out/best_test2.png')
 
 if __name__ == '__main__':
