@@ -31,7 +31,7 @@ class Net(nn.Module):
         self.fc1 = nn.Linear(9216, 128)
         self.fc2 = nn.Linear(128, 10)
 
-    def forward(self, x, logit = False):
+    def forward(self, x, logit = False, log = True):
         x = self.conv1(x)
         x = F.relu(x)
         x = self.conv2(x)
@@ -48,11 +48,13 @@ class Net(nn.Module):
         #training model use log softmax
         #training inversion use softmax
         #training defense use logit
-        
+
         if logit:
+            return x
+
+        if log:
             return F.log_softmax(x, dim=1)
-            #return x
-            
+            #return x    
         else:
             return F.softmax(x, dim=1)
 
@@ -99,12 +101,12 @@ def train_mi(mine, args, model, device, train_loader, optimizer, epoch):
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
-        output = model(data, logit = True)
+        output = model(data)
         #iter = 10
         #temp = torch.cat()
         mi = mine.optimize(data.view(-1,28*28), output, 10, args.batch_size)
 
-        loss = F.nll_loss(output, target) + mi
+        loss = F.nll_loss(output, target) + 0.1 * mi
 
         loss.backward()
         optimizer.step()
@@ -160,7 +162,7 @@ def main():
                         help='input batch size for training (default: 64)')
     parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
                         help='input batch size for testing (default: 1000)')
-    parser.add_argument('--epochs', type=int, default=2, metavar='N',
+    parser.add_argument('--epochs', type=int, default=10, metavar='N',
                         help='number of epochs to train (default: 14)')
     parser.add_argument('--lr', type=float, default=1.0, metavar='LR',
                         help='learning rate (default: 1.0)')
@@ -172,7 +174,7 @@ def main():
                         help='quickly check a single pass')
     parser.add_argument('--seed', type=int, default=1, metavar='S',
                         help='random seed (default: 1)')
-    parser.add_argument('--log-interval', type=int, default=100, metavar='N',
+    parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                         help='how many batches to wait before logging training status')
     parser.add_argument('--save-model', action='store_true', default=True,
                         help='For Saving the current Model')
