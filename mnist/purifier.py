@@ -16,9 +16,9 @@ import numpy as np
 
 
 parser = argparse.ArgumentParser(description='defense against model inversion')
-parser.add_argument('--batch-size', type=int, default=128, metavar='')
+parser.add_argument('--batch-size', type=int, default=256, metavar='')
 parser.add_argument('--test-batch-size', type=int, default=1000, metavar='')
-parser.add_argument('--epochs', type=int, default=50, metavar='')
+parser.add_argument('--epochs', type=int, default=20, metavar='')
 parser.add_argument('--num_workers', type=int, default=1, metavar='')
 parser.add_argument('--no-cuda', action='store_true', default=False)
 parser.add_argument('--seed', type=int, default=1, metavar='')
@@ -29,15 +29,15 @@ class Purifier(nn.Module):
 	def __init__(self):
 		super(Purifier, self).__init__()
 
-		self.encoder = nn.Sequential(nn.Linear(10, 50),
+		self.encoder = nn.Sequential(nn.Linear(10, 7),
 									 nn.ReLU(True),
-									 nn,Linear(50,100),
-									 nn.BatchNorm1d(num_features=100))
+									 nn.Linear(7,4),
+									 nn.BatchNorm1d(num_features=4))
 
-		self.decoder = nn.Sequential(nn.Linear(100,50),
+		self.decoder = nn.Sequential(nn.Linear(4,7),
 									#nn.BatchNorm1d(num_features=530),
-									nn,ReLU(True),
-									nn.Linear(50,10),
+									nn.ReLU(True),
+									nn.Linear(7,10),
 									nn.BatchNorm1d(num_features=10))
 								
 	def forward(self, x):
@@ -66,7 +66,7 @@ def train(purifier, classifier, inversion, device, data_loader,optimizier, epoch
 		optimizier.zero_grad()
 
 
-		logit = classifier(data, release = False)
+		logit = classifier(data, logit = True)
 		_, out = purifier(logit)
 		pred = F.softmax(out, dim=1)
 		recon = inversion(pred)
@@ -78,8 +78,8 @@ def train(purifier, classifier, inversion, device, data_loader,optimizier, epoch
 		#loss = (F.mse_loss(logit,out)
 		#   + alpha * F.nll_loss(pred, target)
 		#   - beta * F.mse_loss(recon, data))
-		loss = a * diff - b * recon_err + c * test_loss 
-
+		#loss = a * diff - b * recon_err + c * test_loss 
+		loss = diff
 		loss.backward()
 		optimizier.step()
 
@@ -107,7 +107,7 @@ def test(purifier, classifier, inversion, device, data_loader ):
 		for data, target in data_loader:
 			data, target = data.to(device), target.to(device)
 
-			logit = classifier(data, release = False)
+			logit = classifier(data, logit = True)
 			out = purifier(logit)
 			pred = F.softmax(out, dim=1)
 			recon = inversion(pred)
@@ -183,7 +183,7 @@ def main():
 
 	try:
 		inv_checkpoint = torch.load(inversion_path)
-		inversion.load_state_dict(inv_checkpoint['model'])
+		inversion.load_state_dict(inv_checkpoint)
 	except:
 		print("=> load classifier checkpoint '{}' failed".format(inversion_path))
 		return
