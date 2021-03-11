@@ -32,7 +32,7 @@ def train(classifier, inversion, log_interval, device, data_loader, optimizer, e
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
         with torch.no_grad():
-            prediction = classifier(data)
+            prediction = classifier(data, log = False)
         #print(prediction)
         reconstruction = inversion(prediction)
         #print(reconstruction)
@@ -55,7 +55,7 @@ def test(classifier, inversion, device, data_loader, epoch, msg):
         for data, target in data_loader:
             data, target = data.to(device), target.to(device)
 
-            prediction = classifier(data)
+            prediction = classifier(data, log = False)
             reconstruction = inversion(prediction)
             mse_loss += F.mse_loss(reconstruction, data, reduction='sum').item()
 
@@ -108,7 +108,7 @@ def main():
 
     # Load classifier
     #path = 'out/classifier.pth'
-    path = 'model/mnist_cnn.pth'
+    path = 'model/mnist_mi.pth'
     #checkpoint = torch.load(path)
     try:
         checkpoint = torch.load(path)
@@ -142,8 +142,8 @@ def main():
                 'best_recon_loss': best_recon_loss
             }
             #torch.save(state, 'model/inversion.pth')
-            torch.save(inversion.state_dict(), 'model/mnist_inv.pth')
-            shutil.copyfile('out/recon_test1_{}.png'.format(epoch), 'out/best_test1.png')
+            torch.save(inversion.state_dict(), 'model/mnist_mi_inv.pth')
+            shutil.copyfile('out/recon_test1_{}.png'.format(epoch), 'out/best_test1_mi.png')
             #shutil.copyfile('out/recon_test2_{}.png'.format(epoch), 'out/best_test2.png')
 
 if __name__ == '__main__':
