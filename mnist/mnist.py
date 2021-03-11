@@ -43,11 +43,15 @@ class Net(nn.Module):
         x = F.relu(x)
         x = self.dropout2(x)
         x = self.fc2(x)
-        #output = F.log_softmax(x, dim=1)
 
+        #output = F.log_softmax(x, dim=1)
+        #training model use log softmax
+        #training inversion use softmax
+        #training defense use logit
+        
         if logit:
-            #return F.log_softmax(x, dim=1)
-            return x
+            return F.log_softmax(x, dim=1)
+            #return x
             
         else:
             return F.softmax(x, dim=1)
@@ -95,7 +99,7 @@ def train_mi(mine, args, model, device, train_loader, optimizer, epoch):
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
-        output = model(data)
+        output = model(data, logit = True)
         #iter = 10
         #temp = torch.cat()
         mi = mine.optimize(data.view(-1,28*28), output, 10, args.batch_size)
@@ -214,7 +218,7 @@ def main():
 
     mine = Mine(T = statistics_network,
                 loss = 'mine', #mine_biased, fdiv
-                method = 'concat')
+                method = 'concat').to(device)
 
 
     scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
