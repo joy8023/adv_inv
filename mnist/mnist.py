@@ -9,6 +9,16 @@ from torch.optim.lr_scheduler import StepLR
 
 import urllib
 from mine.models.mine import Mine
+import mine.utils
+
+
+class ConcatLayer(nn.Module):
+    def __init__(self, dim=1):
+        super().__init__()
+        self.dim = dim
+
+    def forward(self, x, y):
+        return torch.cat((x, y), self.dim)
 
 class Net(nn.Module):
     def __init__(self):
@@ -86,8 +96,9 @@ def train_mi(mine, args, model, device, train_loader, optimizer, epoch):
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
         output = model(data)
-
-        mi = mine.optimize(data, output, iters = 10)
+        #iter = 10
+        temp = torch.cat()
+        mi = mine.optimize(data.view(-1,28*28), output, 10, args.batch_size)
 
         loss = F.nll_loss(output, target) + mi
 
@@ -195,15 +206,16 @@ def main():
 
     #code for mutual info
     statistics_network = nn.Sequential(
-                        nn.Linear(28*28+ 10, 100),
+                        ConcatLayer(),
+                        nn.Linear(28*28 + 10, 100),
                         nn.ReLU(),
                         nn.Linear(100, 100),
                         nn.ReLU(),
                         nn.Linear(100, 1))
 
     mine = Mine(T = statistics_network,
-                loss = 'mine', #mine_biased, fdiv
-                method = 'concat')
+                loss = 'mine') #mine_biased, fdiv
+                #method = 'concat')
 
 
     scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
@@ -214,7 +226,7 @@ def main():
         scheduler.step()
 
     
-    torch.save(model.state_dict(), "model/mnist_cnn.pth")
+    #torch.save(model.state_dict(), "model/mnist_cnn.pth")
     try:
         model_checkpoint = torch.load("model/mnist_cnn.pth")
         model2.load_state_dict(model_checkpoint)
