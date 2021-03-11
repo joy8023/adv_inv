@@ -176,7 +176,7 @@ def main():
 					transform=transform)
 
 	train_loader = torch.utils.data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True, **kwargs)
-	test1_loader = torch.utils.data.DataLoader(test_set, batch_size=args.test_batch_size, shuffle=False, **kwargs)
+	test_loader = torch.utils.data.DataLoader(test_set, batch_size=args.test_batch_size, shuffle=False, **kwargs)
 
 	#train_set = FaceScrub('./facescrub.npz', transform=transform, train=True)
 	#test_set = FaceScrub('./facescrub.npz', transform=transform, train=False)
@@ -215,12 +215,16 @@ def main():
 
 	best_acc = 0
 	best_epoch = 0
+	purifier = purifier.load_state_dict(torch.load('model/purifier.pth'))
 
 	#old_test(classifier, device, train_loader)
 	#return
+	test(purifier, classifier, inversion, device, test_loader )
+	return
+
 	for epoch in range(1, args.epochs + 1):
 		train(purifier, classifier, inversion, device, train_loader,optimizier, epoch)
-		#test(purifier, classifier, inversion, device, data_loader )
+		test(purifier, classifier, inversion, device, test_loader )
 		#cl_acc = test(classifier, device, test_loader)
 		'''
 		if cl_acc > best_cl_acc:
