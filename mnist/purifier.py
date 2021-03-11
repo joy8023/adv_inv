@@ -104,7 +104,7 @@ def train(purifier, classifier, inversion, device, data_loader,optimizier, epoch
 		if batch_idx % 10 == 0:
 			print('Train Epoch: {} [{}/{}]\tLoss: {:.6f}'.format( epoch, batch_idx * len(data), len(data_loader.dataset), loss.item()))
 			print('diff:{:.6f}\trecon err:{:.6f}\ttest loss:{:.6f}'.format(diff.item(),recon_err.item(),test_loss.item()))
-			print(correct1,correct)
+			print(correct1/correct)
 	print("epoch=", epoch, loss.data.float())
 
 def test(purifier, classifier, inversion, device, data_loader ):
@@ -117,6 +117,7 @@ def test(purifier, classifier, inversion, device, data_loader ):
 	recon_err = 0
 	test_loss = 0
 	correct = 0
+	plot = True
 	with torch.no_grad():
 		for data, target in data_loader:
 			data, target = data.to(device), target.to(device)
@@ -130,7 +131,17 @@ def test(purifier, classifier, inversion, device, data_loader ):
 			test_loss += F.nll_loss(pred, target, reduction='sum').item()
 
 			label = out.max(1, keepdim=True)[1]
-			correct += pred.eq(target.view_as(label)).sum().item()
+			correct += label.eq(target.view_as(label)).sum().item()
+
+			if plot:
+				truth = data[0:32]
+				inverse = recon[0:32]
+				out = torch.cat((inverse, truth))
+				for i in range(4):
+					out[i * 16:i * 16 + 8] = inverse[i * 8:i * 8 + 8]
+					out[i * 16 + 8:i * 16 + 16] = truth[i * 8:i * 8 + 8]
+				vutils.save_image(out, 'out/recon_purifier.png', normalize=False)
+				plot = False
 
 
 	diff /= len(data_loader.dataset)
@@ -159,9 +170,9 @@ def main():
 
 	transform = transforms.Compose([transforms.ToTensor()])
 
-	train_set = datasets.MNIST('../data', train=True, download=True,
+	train_set = datasets.QMNIST('../data', train=True, download=True,
 					transform=transform)
-	test_set = datasets.MNIST('../data', train=False, download=True,
+	test_set = datasets.QMNIST('../data', train=False, download=True,
 					transform=transform)
 
 	train_loader = torch.utils.data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True, **kwargs)
