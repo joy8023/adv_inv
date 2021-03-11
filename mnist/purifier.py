@@ -76,8 +76,8 @@ def train(purifier, classifier, inversion, device, data_loader,optimizier, epoch
 		test_loss = F.nll_loss(F.log_softmax(out, dim = 1), target)
 
 		#loss = (F.mse_loss(logit,out)
-		#	+ alpha * F.nll_loss(pred, target)
-		#	- beta * F.mse_loss(recon, data))
+		#   + alpha * F.nll_loss(pred, target)
+		#   - beta * F.mse_loss(recon, data))
 		loss = a * diff - b * recon_err + c * test_loss 
 
 		loss.backward()
@@ -158,8 +158,8 @@ def main():
 
 	#train_loader = torch.utils.data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True, **kwargs)
 	#test_loader = torch.utils.data.DataLoader(test_set, batch_size=args.test_batch_size, shuffle=False, **kwargs)
-    classifier = nn.DataParallel(Net()).to(device)
-    inversion = nn.DataParallel(Inversion()).to(device)
+	classifier = nn.DataParallel(Net()).to(device)
+	inversion = nn.DataParallel(Inversion()).to(device)
 	#classifier = nn.DataParallel(Ne(nc=args.nc, ndf=args.ndf, nz=args.nz)).to(device)
 	#inversion = nn.DataParallel(Inversion(nc=args.nc, ngf=args.ngf, nz=args.nz, truncation=args.truncation, c=args.c)).to(device)
 	purifier = nn.DataParallel(Purifier()).to(device)
