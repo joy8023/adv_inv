@@ -68,16 +68,9 @@ def train(purifier, classifier, inversion, device, data_loader,optimizier, epoch
 	classifier.eval()
 	inversion.eval()
 
-	#batch_size = 128
-
-	alpha = 1
-	beta = 1
-	a = 1e-2
+	a = 1
 	b = 1
 	c = 1
-	#optimizier = optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
-	#l2norm = nn.MSELoss()
-
 
 	for batch_idx, (data, target) in enumerate(data_loader):
 		data, target = data.to(device), target.to(device)
@@ -96,8 +89,8 @@ def train(purifier, classifier, inversion, device, data_loader,optimizier, epoch
 		#loss = (F.mse_loss(logit,out)
 		#   + alpha * F.nll_loss(pred, target)
 		#   - beta * F.mse_loss(recon, data))
-		#loss = a * diff - b * recon_err + c * test_loss 
-		loss = diff
+		loss = a * diff - b * recon_err + c * test_loss 
+		#loss = diff
 		loss.backward()
 		optimizier.step()
 
