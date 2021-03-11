@@ -83,6 +83,9 @@ def train(purifier, classifier, inversion, device, data_loader,optimizier, epoch
 		loss.backward()
 		optimizier.step()
 
+		label1 = logit.max(1, keepdim=True)[1]
+		correct1 = pred.eq(target.view_as(label1)).sum().item()
+
 		label = out.max(1, keepdim=True)[1]
 		correct = pred.eq(target.view_as(label)).sum().item()
 
@@ -90,7 +93,7 @@ def train(purifier, classifier, inversion, device, data_loader,optimizier, epoch
 		if batch_idx % 10 == 0:
 			print('Train Epoch: {} [{}/{}]\tLoss: {:.6f}'.format( epoch, batch_idx * len(data), len(data_loader.dataset), loss.item()))
 			print('diff:{:.6f}\trecon err:{:.6f}\ttest loss:{:.6f}'.format(diff.item(),recon_err.item(),test_loss.item()))
-			print(correct)
+			print(correct1,correct)
 	print("epoch=", epoch, loss.data.float())
 
 def test(purifier, classifier, inversion, device, data_loader ):
@@ -171,7 +174,7 @@ def main():
 	#weight_decay = 1e-5
 
 	#optimizier = optim.Adam(purifier.parameters(), lr=lr, weight_decay=weight_decay)
-	optimizier = optim.Adam(purifier.parameters(), lr=0.0002, betas=(0.5, 0.999), amsgrad=True)
+	optimizier = optim.Adam(purifier.parameters(), lr=0.02, betas=(0.5, 0.999), amsgrad=True)
 
 	try:
 		model_checkpoint = torch.load(model_path)
