@@ -11,7 +11,7 @@ from torchvision import datasets, transforms
 import os, shutil
 import torch.nn.functional as F
 import torchvision.utils as vutils
-from mnist import Net, Inversion, test
+from mnist import Net, Inversion
 import numpy as np
 
 
@@ -44,6 +44,24 @@ class Purifier(nn.Module):
 		encode = self.encoder(x)
 		decode = self.decoder(encode)
 		return encode, decode
+
+def old_test(model, device, test_loader):
+	model.eval()
+	test_loss = 0
+	correct = 0
+	with torch.no_grad():
+		for data, target in test_loader:
+			data, target = data.to(device), target.to(device)
+			output = model(data)
+			test_loss += F.nll_loss(output, target, reduction='sum').item()  # sum up batch loss
+			pred = output.argmax(dim=1, keepdim=True)  # get the index of the max log-probability
+			correct += pred.eq(target.view_as(pred)).sum().item()
+
+	test_loss /= len(test_loader.dataset)
+
+	print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+		test_loss, correct, len(test_loader.dataset),
+		100. * correct / len(test_loader.dataset)))
 
 def train(purifier, classifier, inversion, device, data_loader,optimizier, epoch ):
 
@@ -193,7 +211,8 @@ def main():
 
 	best_acc = 0
 	best_epoch = 0
-	test(classifier, device, train_loader)
+
+	old_test(classifier, device, train_loader)
 	return
 	for epoch in range(1, args.epochs + 1):
 		train(purifier, classifier, inversion, device, train_loader,optimizier, epoch)
