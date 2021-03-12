@@ -12,7 +12,7 @@ from model import Classifier
 # Training settings
 parser = argparse.ArgumentParser(description='Adversarial Model Inversion Demo')
 parser.add_argument('--batch-size', type=int, default=128, metavar='')
-parser.add_argument('--test-batch-size', type=int, default=1000, metavar='')
+parser.add_argument('--test-batch-size', type=int, default=500, metavar='')
 parser.add_argument('--epochs', type=int, default=100, metavar='')
 parser.add_argument('--lr', type=float, default=0.01, metavar='')
 parser.add_argument('--momentum', type=float, default=0.5, metavar='')
@@ -84,9 +84,11 @@ def main():
     best_cl_epoch = 0
 
     #test use only
-    classifier.load_stata_dict(torch.load('model/model_dict.pth'))
+    '''
+    classifier.load_state_dict(torch.load('model/model_dict.pth'))
     test(classifier,device,test_loader)
     return
+    '''
     # Train classifier
     for epoch in range(1, args.epochs + 1):
         train(classifier, args.log_interval, device, train_loader, optimizer, epoch)
@@ -101,7 +103,7 @@ def main():
                 'optimizer': optimizer.state_dict(),
                 'best_cl_acc': best_cl_acc,
             }
-            torch.save(state, 'model/classifier.pth')
+            #torch.save(state, 'model/classifier.pth')
             torch.save(classifier.state_dict(), 'model/model_dict.pth')
 
     print("Best classifier: epoch {}, acc {:.4f}".format(best_cl_epoch, best_cl_acc))
