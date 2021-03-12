@@ -35,12 +35,15 @@ class Purifier(nn.Module):
 		super(Purifier, self).__init__()
 
 		self.encoder = nn.Sequential(nn.Linear(530, 200),
-									#nn.BatchNorm1d(num_features=200),
-									 nn.ReLU(True))
+									 nn.ReLU(True),
+									 nn.Linear(200,100),
+									 nn.BatchNorm1d(num_features=100))
 
-		self.decoder = nn.Sequential(nn.Linear(200, 530),
+		self.decoder = nn.Sequential(nn.Linear(100,200),
 									#nn.BatchNorm1d(num_features=530),
-									 nn.Sigmoid())
+									nn.ReLU(True),
+									nn.Linear(200,530),
+									nn.BatchNorm1d(num_features=10))
 								
 	def forward(self, x):
 		encode = self.encoder(x)
@@ -56,7 +59,7 @@ def train(purifier, classifier, inversion, device, data_loader,optimizier, epoch
 
 	alpha = 1
 	beta = 1
-	a = 1e-2
+	a = 1
 	b = 1
 	c = 1
 	#optimizier = optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
@@ -85,14 +88,16 @@ def train(purifier, classifier, inversion, device, data_loader,optimizier, epoch
 		loss.backward()
 		optimizier.step()
 
-		label = out.max(1, keepdim=True)[1]
-		correct = pred.eq(target.view_as(label)).sum().item()
+		label1 = logit.argmax(dim=1, keepdim=True)
+		correct1 = label1.eq(target.view_as(label1)).sum().item()
 
+		label = out.argmax(dim=1, keepdim=True)
+		correct = label.eq(target.view_as(label)).sum().item()
 
 		if batch_idx % 10 == 0:
 			print('Train Epoch: {} [{}/{}]\tLoss: {:.6f}'.format( epoch, batch_idx * len(data), len(data_loader.dataset), loss.item()))
 			print('diff:{:.6f}\trecon err:{:.6f}\ttest loss:{:.6f}'.format(diff.item(),recon_err.item(),test_loss.item()))
-			print(correct)
+			print(correct1, correct)
 	print("epoch=", epoch, loss.data.float())
 
 def test(purifier, classifier, inversion, device, data_loader ):
@@ -118,7 +123,7 @@ def test(purifier, classifier, inversion, device, data_loader ):
 			test_loss += F.nll_loss(pred, target, reduction='sum').item()
 
 			label = out.max(1, keepdim=True)[1]
-			correct += pred.eq(target.view_as(label)).sum().item()
+			correct += label.eq(target.view_as(label)).sum().item()
 
 
 	diff /= len(data_loader.dataset)
@@ -165,7 +170,7 @@ def main():
 	#weight_decay = 1e-5
 
 	#optimizier = optim.Adam(purifier.parameters(), lr=lr, weight_decay=weight_decay)
-	optimizier = optim.Adam(purifier.parameters(), lr=0.0002, betas=(0.5, 0.999), amsgrad=True)
+	optimizier = optim.Adam(purifier.parameters(), lr=0.0005, betas=(0.5, 0.999), amsgrad=True)
 
 	try:
 		model_checkpoint = torch.load(model_path)
@@ -201,7 +206,7 @@ def main():
 			torch.save(state, 'model/classifier.pth')
 			torch.save(classifier.state_dict(), 'model/model_dict.pth')
 		'''
-		torch.save(purifier.state_dict(), 'model/purifier_dict.pth')
+		torch.save(purifier.state_dict(), 'model/purifier.pth')
 
 	
 	#print("Best classifier: epoch {}, acc {:.4f}".format(best_cl_epoch, best_cl_acc))
