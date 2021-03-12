@@ -83,6 +83,10 @@ def main():
     best_cl_acc = 0
     best_cl_epoch = 0
 
+    #test use only
+    classifier.load_stata_dict(torch.load('model/model_dict.pth'))
+    test(classifier,device,test_loader)
+    return
     # Train classifier
     for epoch in range(1, args.epochs + 1):
         train(classifier, args.log_interval, device, train_loader, optimizer, epoch)
