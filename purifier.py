@@ -17,7 +17,7 @@ import numpy as np
 parser = argparse.ArgumentParser(description='defense against model inversion')
 parser.add_argument('--batch-size', type=int, default=128, metavar='')
 parser.add_argument('--test-batch-size', type=int, default=1000, metavar='')
-parser.add_argument('--epochs', type=int, default=50, metavar='')
+parser.add_argument('--epochs', type=int, default=20, metavar='')
 parser.add_argument('--nc', type=int, default=1)
 parser.add_argument('--ndf', type=int, default=128)
 parser.add_argument('--ngf', type=int, default=128)
@@ -124,8 +124,12 @@ def test(purifier, classifier, inversion, device, data_loader ):
 			recon_err += F.mse_loss(recon, data, reduction='sum').item()
 			test_loss += F.nll_loss(pred, target, reduction='sum').item()
 
-			label = out.max(1, keepdim=True)[1]
-			correct += label.eq(target.view_as(label)).sum().item()
+			
+			label1 = logit.argmax(dim=1, keepdim=True)
+			correct1 = label1.eq(target.view_as(label1)).sum().item()
+
+			label = out.argmax(dim=1, keepdim=True)
+			correct = label.eq(target.view_as(label)).sum().item()
 
 			if plot:
 				truth = data[0:32]
@@ -142,10 +146,11 @@ def test(purifier, classifier, inversion, device, data_loader ):
 	recon_err /= len(data_loader.dataset)
 	test_loss /= len(data_loader.dataset)
 	correct /= len(data_loader.dataset)
+	correct1 /= len(data_loader.dataset)
 	print('diff:', diff)
 	print('recon_err:', recon_err)
 	print('test_loss:', test_loss)
-	print('accu:',correct)
+	print('accu(original/purifier):',correct1, correct)
 	print('**********************')
 
 
@@ -201,6 +206,12 @@ def main():
 
 	best_acc = 0
 	best_epoch = 0
+
+	#test use only
+	purifier.load_state_dict(torch.load( 'model/purifier.pth'))
+	test(purifier, classifier, inversion, device, test_loader )
+	return
+	
 	for epoch in range(1, args.epochs + 1):
 		train(purifier, classifier, inversion, device, train_loader,optimizier, epoch)
 		#test(purifier, classifier, inversion, device, data_loader )
