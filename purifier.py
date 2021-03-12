@@ -34,16 +34,16 @@ class Purifier(nn.Module):
 	def __init__(self):
 		super(Purifier, self).__init__()
 
-		self.encoder = nn.Sequential(nn.Linear(530, 200),
+		self.encoder = nn.Sequential(nn.Linear(530, 100),
 									 nn.ReLU(True),
-									 nn.Linear(200,100),
+									 #nn.Linear(200,100),
 									 nn.BatchNorm1d(num_features=100))
 
-		self.decoder = nn.Sequential(nn.Linear(100,200),
+		self.decoder = nn.Sequential(nn.Linear(100,530),
 									#nn.BatchNorm1d(num_features=530),
-									nn.ReLU(True),
-									nn.Linear(200,530),
-									nn.BatchNorm1d(num_features=10))
+									#nn.ReLU(True),
+									#nn.Linear(200,530),
+									nn.BatchNorm1d(num_features=530))
 								
 	def forward(self, x):
 		encode = self.encoder(x)
@@ -110,6 +110,8 @@ def test(purifier, classifier, inversion, device, data_loader ):
 	recon_err = 0
 	test_loss = 0
 	correct = 0
+	plot = True
+
 	with torch.no_grad():
 		for data, target in data_loader:
 			data, target = data.to(device), target.to(device)
@@ -124,6 +126,16 @@ def test(purifier, classifier, inversion, device, data_loader ):
 
 			label = out.max(1, keepdim=True)[1]
 			correct += label.eq(target.view_as(label)).sum().item()
+
+			if plot:
+				truth = data[0:32]
+				inverse = recon[0:32]
+				out = torch.cat((inverse, truth))
+				for i in range(4):
+					out[i * 16:i * 16 + 8] = inverse[i * 8:i * 8 + 8]
+					out[i * 16 + 8:i * 16 + 16] = truth[i * 8:i * 8 + 8]
+				vutils.save_image(out, 'out/recon_purifier.png', normalize=False)
+				plot = False
 
 
 	diff /= len(data_loader.dataset)
