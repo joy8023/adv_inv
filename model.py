@@ -41,18 +41,21 @@ class Classifier(nn.Module):
             nn.Linear(nz * 5, nz),
         )
 
-    def forward(self, x, release=False):
+    def forward(self, x, logit = False, log = True):
 
         x = x.view(-1, 1, 64, 64)
         x = self.encoder(x)
         x = x.view(-1, self.ndf * 8 * 4 * 4)
         x = self.fc(x)
 
-        if release:
-            return F.softmax(x, dim=1)
+        if logit:
+            return x
+
+        if log:
+            return F.log_softmax(x, dim=1)
         else:
             #return F.log_softmax(x, dim=1)
-            return x
+            return F.softmax(x, dim=1)
 
 class Inversion(nn.Module):
     def __init__(self, nc, ngf, nz, truncation, c):
