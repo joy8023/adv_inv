@@ -14,7 +14,7 @@ import torchvision.utils as vutils
 parser = argparse.ArgumentParser(description='Adversarial Model Inversion Demo')
 parser.add_argument('--batch-size', type=int, default=128, metavar='')
 parser.add_argument('--test-batch-size', type=int, default=500, metavar='')
-parser.add_argument('--epochs', type=int, default=70, metavar='')
+parser.add_argument('--epochs', type=int, default=100, metavar='')
 parser.add_argument('--lr', type=float, default=0.01, metavar='')
 parser.add_argument('--momentum', type=float, default=0.5, metavar='')
 parser.add_argument('--no-cuda', action='store_true', default=False)
@@ -36,7 +36,7 @@ def train(classifier, inversion, log_interval, device, data_loader, optimizer, e
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
         with torch.no_grad():
-            prediction = classifier(data, release=True)
+            prediction = classifier(data, log = False)
         reconstruction = inversion(prediction)
         loss = F.mse_loss(reconstruction, data)
         loss.backward()
@@ -55,7 +55,7 @@ def test(classifier, inversion, device, data_loader, epoch, msg):
         for data, target in data_loader:
             data, target = data.to(device), target.to(device)
 
-            prediction = classifier(data, release=True)
+            prediction = classifier(data, log = False)
             reconstruction = inversion(prediction)
             mse_loss += F.mse_loss(reconstruction, data, reduction='sum').item()
 
@@ -135,8 +135,8 @@ def main():
                 'optimizer': optimizer.state_dict(),
                 'best_recon_loss': best_recon_loss
             }
-            torch.save(state, 'model/inversion.pth')
-            torch.save(inversion.state_dict(), 'model/inv_model_dict.pth')
+            #torch.save(state, 'model/inversion.pth')
+            torch.save(inversion.state_dict(), 'model/inv_model.pth')
             shutil.copyfile('out/recon_test1_{}.png'.format(epoch), 'out/best_test1.png')
             #shutil.copyfile('out/recon_test2_{}.png'.format(epoch), 'out/best_test2.png')
 
