@@ -16,7 +16,7 @@ import numpy as np
 
 parser = argparse.ArgumentParser(description='defense against model inversion')
 parser.add_argument('--batch-size', type=int, default=128, metavar='')
-parser.add_argument('--test-batch-size', type=int, default=1000, metavar='')
+parser.add_argument('--test-batch-size', type=int, default=500, metavar='')
 parser.add_argument('--epochs', type=int, default=20, metavar='')
 parser.add_argument('--nc', type=int, default=1)
 parser.add_argument('--ndf', type=int, default=128)
@@ -71,7 +71,7 @@ def train(purifier, classifier, inversion, device, data_loader,optimizier, epoch
 		optimizier.zero_grad()
 
 
-		logit = classifier(data, release = False)
+		logit = classifier(data, logit = True)
 		_, out = purifier(logit)
 		pred = F.softmax(out, dim=1)
 		recon = inversion(pred)
@@ -110,14 +110,15 @@ def test(purifier, classifier, inversion, device, data_loader ):
 	recon_err = 0
 	test_loss = 0
 	correct = 0
+	correct1 = 0
 	plot = True
 
 	with torch.no_grad():
 		for data, target in data_loader:
 			data, target = data.to(device), target.to(device)
 
-			logit = classifier(data, release = False)
-			out = purifier(logit)
+			logit = classifier(data, logit = True)
+			_, out = purifier(logit)
 			pred = F.softmax(out, dim=1)
 			recon = inversion(pred)
 			diff += F.mse_loss(logit, out, reduction='sum').item()
@@ -126,10 +127,10 @@ def test(purifier, classifier, inversion, device, data_loader ):
 
 			
 			label1 = logit.argmax(dim=1, keepdim=True)
-			correct1 = label1.eq(target.view_as(label1)).sum().item()
+			correct1 += label1.eq(target.view_as(label1)).sum().item()
 
 			label = out.argmax(dim=1, keepdim=True)
-			correct = label.eq(target.view_as(label)).sum().item()
+			correct += label.eq(target.view_as(label)).sum().item()
 
 			if plot:
 				truth = data[0:32]
@@ -180,7 +181,7 @@ def main():
 	inversion = nn.DataParallel(Inversion(nc=args.nc, ngf=args.ngf, nz=args.nz, truncation=args.truncation, c=args.c)).to(device)
 	purifier = nn.DataParallel(Purifier()).to(device)
 	model_path = 'model/model_dict.pth'
-	inversion_path = 'model/inversion.pth'
+	inversion_path = 'model/inv_model.pth'
 
 	
 	#lr = 0.01
@@ -199,7 +200,7 @@ def main():
 
 	try:
 		inv_checkpoint = torch.load(inversion_path)
-		inversion.load_state_dict(inv_checkpoint['model'])
+		inversion.load_state_dict(inv_checkpoint)
 	except:
 		print("=> load classifier checkpoint '{}' failed".format(inversion_path))
 		return
@@ -208,13 +209,13 @@ def main():
 	best_epoch = 0
 
 	#test use only
-	purifier.load_state_dict(torch.load( 'model/purifier.pth'))
-	test(purifier, classifier, inversion, device, test_loader )
-	return
-	
+	#purifier.load_state_dict(torch.load( 'model/purifier.pth'))
+	#test(purifier, classifier, inversion, device, test_loader )
+	#return
+
 	for epoch in range(1, args.epochs + 1):
 		train(purifier, classifier, inversion, device, train_loader,optimizier, epoch)
-		#test(purifier, classifier, inversion, device, data_loader )
+		test(purifier, classifier, inversion, device, test_loader )
 		#cl_acc = test(classifier, device, test_loader)
 		'''
 		if cl_acc > best_cl_acc:
