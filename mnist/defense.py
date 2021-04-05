@@ -22,8 +22,8 @@ parser.add_argument('--seed', type=int, default=1, metavar='')
 parser.add_argument('--log-interval', type=int, default=10, metavar='')
 parser.add_argument('--c', type=float, default=50.)
 parser.add_argument('--num_workers', type=int, default=1, metavar='')
-parser.add_argument('--epsilon', type = float, default = 1e-3, metavar = '')
-parser.add_argument('--num_step', type = int, default = 3, metavar = '')
+parser.add_argument('--epsilon', type = float, default = 1, metavar = '')
+parser.add_argument('--num_step', type = int, default = 10, metavar = '')
 
 
 def perturb(prediction, epsilon, grad, logit_original, logit = True):
@@ -73,13 +73,17 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 	for batch_idx, (data_, target_) in enumerate(data_loader):
 
 		data = data_.to(device)
+		data_ = data_.to(device)
+
+		with torch.no_grad():
+			logit = classifier(data, logit = True)
 
 		for i in range(num_step):
 
 			print('========perturbation iteration:',i)
 
-			with torch.no_grad():
-				logit = classifier(data, logit = True)
+			#with torch.no_grad():
+			#	logit = classifier(data, logit = True)
 		
 			#create new tensor for further perturbation
 			#logit = logit.clone().detach().to(device)
@@ -98,8 +102,9 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 			#perturbation= perturbation.to(device)
 			pert_recon = inversion(F.softmax(perturbation, dim=1))
 
-			loss1 = F.mse_loss(pert_recon, data)
-
+			logit = perturbation
+			#loss1 = F.mse_loss(pert_recon, data)
+			'''
 			#for plot use			
 			if i == 0:
 				truth = data[0:8]
@@ -109,6 +114,7 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 			out = torch.cat((out, pert_recon[0:8]))	
 
 			data = pert_recon.clone().detach().to(device)
+			'''
 
 
 		# test defense use
