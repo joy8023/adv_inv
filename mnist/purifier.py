@@ -162,6 +162,62 @@ def test(purifier, classifier, inversion, device, data_loader,msg ):
 	print('**********************')
 
 
+def mi_test(classifier, inversion, device, data_loader, msg ):
+
+	classifier.eval()
+	inversion.eval()
+
+	l2norm = nn.MSELoss()
+	diff = 0
+	recon_err = 0
+	test_loss = 0
+	correct = 0
+	plot = True
+	l1max = 0
+	with torch.no_grad():
+		for data, target in data_loader:
+			data, target = data.to(device), target.to(device)
+
+			logit = classifier(data, logit = True)
+			#_, out = purifier(logit)
+			pred = F.softmax(out, dim=1)
+			recon = inversion(pred)
+
+			l1 = F.l1_loss(logit, out).max().item()
+			if l1>l1max:
+				l1max = l1
+
+
+			diff += F.l1_loss(logit, out, reduction='sum').item()
+			recon_err += F.mse_loss(recon, data, reduction='sum').item()
+			#test_loss += F.nll_loss(pred, target, reduction='sum').item()
+
+			label = out.max(1, keepdim=True)[1]
+			correct += label.eq(target.view_as(label)).sum().item()
+
+			if plot:
+				truth = data[0:32]
+				inverse = recon[0:32]
+				out = torch.cat((inverse, truth))
+				for i in range(4):
+					out[i * 16:i * 16 + 8] = inverse[i * 8:i * 8 + 8]
+					out[i * 16 + 8:i * 16 + 16] = truth[i * 8:i * 8 + 8]
+				vutils.save_image(out, 'out/recon_mi_{}.png'.format(msg.replace(" ", "")), normalize=False)
+				plot = False
+
+
+	diff /= len(data_loader.dataset)*10
+	recon_err /= len(data_loader.dataset)*28*28
+	#test_loss /= len(data_loader.dataset)
+	correct /= len(data_loader.dataset)
+	print('diff:', diff)
+	print('recon_err:', recon_err)
+	#print('test_loss:', test_loss)
+	print('accu:',correct)
+	print('l1max:',l1max)
+	print('**********************')
+
+
 def main():
 
 	args = parser.parse_args()
@@ -197,16 +253,15 @@ def main():
 	#classifier = nn.DataParallel(Ne(nc=args.nc, ndf=args.ndf, nz=args.nz)).to(device)
 	#inversion = nn.DataParallel(Inversion(nc=args.nc, ngf=args.ngf, nz=args.nz, truncation=args.truncation, c=args.c)).to(device)
 	purifier = nn.DataParallel(Purifier()).to(device)
-	model_path = 'model/mnist_cnn.pth'
-	inversion_path = 'model/mnist_inv.pth'
 
-	
+	model_path = 'model/mnist_cnn.pth'
+	inversion_path = 'model/mnist_inv.pth'	
 	#lr = 0.01
 	#weight_decay = 1e-5
 
 	#optimizier = optim.Adam(purifier.parameters(), lr=lr, weight_decay=weight_decay)
 	optimizier = optim.Adam(purifier.parameters(), lr=0.02, betas=(0.5, 0.999), amsgrad=True)
-
+	'''
 	try:
 		model_checkpoint = torch.load(model_path)
 		classifier.load_state_dict(model_checkpoint)
@@ -214,7 +269,7 @@ def main():
 	except:
 		print("=> load classifier checkpoint '{}' failed".format(model_path))
 		return
-
+	'''
 	try:
 		inv_checkpoint = torch.load(inversion_path)
 		inversion.load_state_dict(inv_checkpoint)
@@ -224,10 +279,24 @@ def main():
 
 	best_acc = 0
 	best_epoch = 0
-	purifier.load_state_dict(torch.load('model/purifier.pth'))
+	#purifier.load_state_dict(torch.load('model/purifier.pth'))
+
+	#mi model test
+	mi_path = 'model/mnist_mi.pth'
+	try:
+		checkpoint = torch.load(mi_path)
+		classifier.load_state_dict(checkpoint)
+	except:
+		print("=> load classifier checkpoint '{}' failed".format(path))
+		return
+
 
 	#old_test(classifier, device, train_loader)
-	#return
+	mi_test(classifier, inversion, device, test_loader,'qmnist')
+	mi_test(classifier, inversion, device, test2_loader,'mnist')
+
+	return
+	
 	test(purifier, classifier, inversion, device, test_loader,'qmnist')
 	test(purifier, classifier, inversion, device, test2_loader,'mnist')
 
