@@ -150,8 +150,8 @@ def test(purifier, classifier, inversion, device, data_loader,msg ):
 				plot = False
 
 
-	diff /= len(data_loader.dataset)
-	recon_err /= len(data_loader.dataset)
+	diff /= len(data_loader.dataset)*10
+	recon_err /= len(data_loader.dataset)*28*28
 	test_loss /= len(data_loader.dataset)
 	correct /= len(data_loader.dataset)
 	print('diff:', diff)
