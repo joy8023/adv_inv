@@ -132,7 +132,7 @@ def test(purifier, classifier, inversion, device, data_loader,msg ):
 				l1max = l1
 
 
-			diff += F.mse_loss(logit, out, reduction='sum').item()
+			diff += F.l1_loss(logit, out, reduction='sum').item()
 			recon_err += F.mse_loss(recon, data, reduction='sum').item()
 			test_loss += F.nll_loss(pred, target, reduction='sum').item()
 
