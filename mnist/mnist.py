@@ -104,9 +104,9 @@ def train_mi(mine, args, model, device, train_loader, optimizer, epoch):
 		output = model(data)
 		#iter = 10
 		#temp = torch.cat()
-		mi = mine.optimize(data.view(-1,28*28), output, 5, args.batch_size)
+		mi = mine.optimize(data.view(-1,28*28), output, 2, args.batch_size)
 
-		loss = F.nll_loss(output, target) + 0.1 * mi
+		loss = F.nll_loss(output, target) + 0.01 * mi
 
 		loss.backward()
 		optimizer.step()
@@ -199,9 +199,9 @@ def main():
 		transforms.Normalize((0.1307,), (0.3081,))
 		])
 
-	dataset1 = datasets.QMNIST('../data', train=True, download=True,
+	dataset1 = datasets.MNIST('../data', train=True, download=True,
 					   transform=transform)
-	dataset2 = datasets.QMNIST('../data', train=False,
+	dataset2 = datasets.MNIST('../data', train=False,
 					   transform=transform)
 	train_loader = torch.utils.data.DataLoader(dataset1,**train_kwargs)
 	test_loader = torch.utils.data.DataLoader(dataset2, **test_kwargs)
@@ -210,7 +210,7 @@ def main():
 	
 	#model2 = nn.DataParallel(Net()).to(device)
 	optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
-	'''
+	
 	#code for mutual info
 	statistics_network = nn.Sequential(
 						nn.Linear(28*28 + 10, 100),
@@ -242,6 +242,7 @@ def main():
 		return
 
 	test(model, device, test_loader)
+	'''
 	
 
 if __name__ == '__main__':
