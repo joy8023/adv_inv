@@ -56,7 +56,7 @@ def old_test(model, device, test_loader):
 			pred = output.argmax(dim=1, keepdim=True)  # get the index of the max log-probability
 			correct += pred.eq(target.view_as(pred)).sum().item()
 
-	test_loss /= len(test_loader.dataset)
+	test_loss /= len(test_loader.dataset)*10
 
 	print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
 		test_loss, correct, len(test_loader.dataset),
@@ -179,7 +179,7 @@ def mi_test(classifier, classifier_mi, inversion, device, data_loader, msg ):
 			data, target = data.to(device), target.to(device)
 
 			logit = classifier(data, logit = True)
-			out = classifier_mi(data_loader,logit = True)
+			out = classifier_mi(data,logit = True)
 
 			#_, out = purifier(logit)
 			pred = F.softmax(out, dim=1)
@@ -292,6 +292,7 @@ def main():
 
 	#old_test(classifier, device, train_loader)
 	mi_test(classifier, classifier_mi, inversion, device, test_loader,'qmnist')
+	old_test(classifier_mi, device,test_loader)
 	mi_test(classifier, classifier_mi, inversion, device, test2_loader,'mnist')
 
 	return
