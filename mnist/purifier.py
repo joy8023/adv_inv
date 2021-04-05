@@ -6,7 +6,6 @@ from torchvision.utils import save_image
 import argparse
 import torch.nn as nn
 import torch.optim as optim
-import os, shutil
 from torchvision import datasets, transforms
 import os, shutil
 import torch.nn.functional as F
@@ -53,7 +52,7 @@ def old_test(model, device, test_loader):
 		for data, target in test_loader:
 			data, target = data.to(device), target.to(device)
 			output = model(data)
-			test_loss += F.nll_loss(output, target, reduction='sum').item()  # sum up batch loss
+			test_loss += F.l1_loss(output, target, reduction='sum').item()  # sum up batch loss
 			pred = output.argmax(dim=1, keepdim=True)  # get the index of the max log-probability
 			correct += pred.eq(target.view_as(pred)).sum().item()
 
@@ -107,7 +106,7 @@ def train(purifier, classifier, inversion, device, data_loader,optimizier, epoch
 			print(correct1/correct)
 	print("epoch=", epoch, loss.data.float())
 
-def test(purifier, classifier, inversion, device, data_loader ):
+def test(purifier, classifier, inversion, device, data_loader,msg ):
 
 	classifier.eval()
 	inversion.eval()
@@ -118,14 +117,21 @@ def test(purifier, classifier, inversion, device, data_loader ):
 	test_loss = 0
 	correct = 0
 	plot = True
+	l1max = 0
 	with torch.no_grad():
 		for data, target in data_loader:
 			data, target = data.to(device), target.to(device)
 
 			logit = classifier(data, logit = True)
-			out = purifier(logit)
+			_, out = purifier(logit)
 			pred = F.softmax(out, dim=1)
 			recon = inversion(pred)
+
+			l1 = F.l1_loss(logit, out).max().item()
+			if l1>l1max:
+				l1max = l1
+
+
 			diff += F.mse_loss(logit, out, reduction='sum').item()
 			recon_err += F.mse_loss(recon, data, reduction='sum').item()
 			test_loss += F.nll_loss(pred, target, reduction='sum').item()
@@ -140,7 +146,7 @@ def test(purifier, classifier, inversion, device, data_loader ):
 				for i in range(4):
 					out[i * 16:i * 16 + 8] = inverse[i * 8:i * 8 + 8]
 					out[i * 16 + 8:i * 16 + 16] = truth[i * 8:i * 8 + 8]
-				vutils.save_image(out, 'out/recon_purifier.png', normalize=False)
+				vutils.save_image(out, 'out/recon_purifier_{}.png'.format(msg.replace(" ", "")), normalize=False)
 				plot = False
 
 
@@ -152,6 +158,7 @@ def test(purifier, classifier, inversion, device, data_loader ):
 	print('recon_err:', recon_err)
 	print('test_loss:', test_loss)
 	print('accu:',correct)
+	print('l1max:',l1max)
 	print('**********************')
 
 
@@ -174,10 +181,12 @@ def main():
 					transform=transform)
 	test_set = datasets.QMNIST('../data', train=False, download=True,
 					transform=transform)
+	test2_set = datasets.MNIST('../data', train=False, download=True,
+					transform=transform)
 
 	train_loader = torch.utils.data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True, **kwargs)
 	test_loader = torch.utils.data.DataLoader(test_set, batch_size=args.test_batch_size, shuffle=False, **kwargs)
-
+	test2_loader = torch.utils.data.DataLoader(test2_set, batch_size=args.test_batch_size, shuffle=False, **kwargs)
 	#train_set = FaceScrub('./facescrub.npz', transform=transform, train=True)
 	#test_set = FaceScrub('./facescrub.npz', transform=transform, train=False)
 
@@ -215,11 +224,13 @@ def main():
 
 	best_acc = 0
 	best_epoch = 0
-	purifier = purifier.load_state_dict(torch.load('model/purifier.pth'))
+	purifier.load_state_dict(torch.load('model/purifier.pth'))
 
 	#old_test(classifier, device, train_loader)
 	#return
-	test(purifier, classifier, inversion, device, test_loader )
+	test(purifier, classifier, inversion, device, test_loader,'qmnist')
+	test(purifier, classifier, inversion, device, test2_loader,'mnist')
+
 	return
 
 	for epoch in range(1, args.epochs + 1):
