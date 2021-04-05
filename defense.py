@@ -23,8 +23,8 @@ parser.add_argument('--c', type=float, default=50.)
 parser.add_argument('--num_workers', type=int, default=1, metavar='')
 parser.add_argument('--no-cuda', action='store_true', default=False)
 parser.add_argument('--seed', type=int, default=1, metavar='')
-parser.add_argument('--epsilon', type = float, default = 10e-5, metavar = '')
-parser.add_argument('--num_step', type = int, default = 10, metavar = '')
+parser.add_argument('--epsilon', type = float, default = 0.1, metavar = '')
+parser.add_argument('--num_step', type = int, default = 5, metavar = '')
 
 
 def predict(classifier, device, data_loader):
@@ -50,12 +50,12 @@ def restore(new_logit, new_label, original_logit, original_label, amplifier = 1.
 		return new_logit
 
 
-def perturb(prediction, epsilon, grad, logit_original):
+def perturb(prediction, epsilon, grad, logit_original, logit = True):
 
 	sign = grad.sign()
 	logit_new = prediction + epsilon * sign 
 	
-	logit_diff = F.mse_loss(logit_new, logit_original)
+	logit_diff = F.l1_loss(logit_new, logit_original)
 	#print('*************logit_diff:',logit_diff.item())
 
 	#calculate accuracy for perturbed images
@@ -80,24 +80,18 @@ def perturb(prediction, epsilon, grad, logit_original):
 	logit_new[orig_label_onehot] = torch.max(logit_new, 1)[0]*1.1
 
 
-	new_label = torch.max(logit_new, 1)[1].cpu().numpy()
+	#new_label = torch.max(logit_new, 1)[1].cpu().numpy()
 
-	accu = np.sum(original_label == new_label)/original_label.shape[0]
-
-	#print('************accu:',accu)
-
-	'''
-	print(torch.max(logit_original,1)[0].data)
-	print(logit_new[0][original_label[0]].item())
-	print(logit_new[0][new_label[0]].item())
-	print(torch.max(logit_new,1)[0].data)
-	'''
+	#accu = np.sum(original_label == new_label)/original_label.shape[0]
 
 	output = F.softmax(logit_new, dim=1)
-	output_diff = F.mse_loss(output, F.softmax(prediction, dim=1))
+	#output_diff = F.mse_loss(output, F.softmax(prediction, dim=1))
 	#print('************output_diff', output_diff.item())
+	if logit == True:
+		return logit_new
+	else:
+		return output
 
-	return output
 
 #main outer function
 def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
@@ -105,11 +99,21 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 	classifier.eval()
 	inversion.eval()
 
+	diff = 0
+	recon_err = 0
+	correct = 0
+	l1max = 0
+	plot = True
+
+
 	for batch_idx, (data_, target_) in enumerate(data_loader):
 
+
 		data = data_.to(device)
+		data_ = data_.to(device)
+		target_ = target_.to(device)
 		print('############batch:',batch_idx)
-		
+		'''
 		if batch_idx%2 == 1:
 			with torch.no_grad():
 				pred = classifier(data, release = True)
@@ -119,15 +123,13 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 			result = torch.cat((result,pred))
 			print("no defense batch")
 			continue
-
+		'''
+		with torch.no_grad():
+			logit = classifier(data, release = False)
 
 		for i in range(num_step):
 
 			#print('========perturbation iteration:',i)
-
-			with torch.no_grad():
-				logit = classifier(data, release = False)
-		
 			#create new tensor for further perturbation
 			logit = logit.clone().detach().to(device)
 			logit.requires_grad = True
@@ -142,8 +144,10 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 				original_logit = logit
 
 			perturbation = perturb(logit, epsilon, logit_grad, original_logit)
-			perturbation= perturbation.to(device)
-			pert_recon = inversion(perturbation)
+			#perturbation= perturbation.to(device)
+			pert_recon = inversion(F.softmax(perturbation, dim=1))
+
+			logit = perturbation
 
 			#for plot use
 			'''
@@ -156,8 +160,27 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 			
 			out = out = torch.cat((out, pert_recon[0:8]))
 			'''
-			data = pert_recon.clone().detach().to(device)
-		
+			#data = pert_recon.clone().detach().to(device)
+		# test defense use
+		l1 = F.l1_loss(original_logit, perturbation).max().item()
+		if l1>l1max:
+			l1max = l1
+
+		diff += F.l1_loss(original_logit, perturbation, reduction='sum').item()
+		recon_err += F.mse_loss(pert_recon, data_, reduction='sum').item()
+		label = perturbation.max(1, keepdim=True)[1]
+		correct += label.eq(target_.view_as(label)).sum().item()
+
+		if plot:
+			truth = data_[0:32]
+			inverse = pert_recon[0:32]
+			out = torch.cat((inverse, truth))
+			for i in range(4):
+				out[i * 16:i * 16 + 8] = inverse[i * 8:i * 8 + 8]
+				out[i * 16 + 8:i * 16 + 16] = truth[i * 8:i * 8 + 8]
+			vutils.save_image(out, 'out/recon_def.png', normalize=False)
+			plot = False
+		'''
 		#to save img and their result
 		if batch_idx == 0:
 			img = data_
@@ -166,11 +189,11 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 		img = torch.cat((img,data_))
 		result = torch.cat((result,perturbation))
 		print("defense batch")
-
+		'''
 
 		#only do the first batch
 		#break
-
+	'''
 	img = img.cpu().numpy()
 	result = result.detach().cpu().numpy()
 	print(img.shape)
@@ -181,6 +204,15 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 	
 	#out = torch.cat((out, torch.tensor(after_noise)))
 	#vutils.save_image(out, 'out1/test_epsilon_{}.png'.format(epsilon), normalize=False)
+	'''
+	diff /= len(data_loader.dataset)*10
+	recon_err /= len(data_loader.dataset)*28*28
+	correct /= len(data_loader.dataset)
+	print('diff:', diff)
+	print('recon_err:', recon_err)
+	print('accu:',correct)
+	print('l1max:',l1max)
+	print('**********************')
 
 	return
 
@@ -274,13 +306,12 @@ def main():
 	inversion = nn.DataParallel(Inversion(nc=args.nc, ngf=args.ngf, nz=args.nz, truncation=args.truncation, c=args.c)).to(device)
 
 	model_path = 'model/model_dict.pth'
-	inversion_path = 'model/inversion.pth'
+	inversion_path = 'model/inv_model.pth'
 	#inversion_path = 'out/inversion_def.pth'
 
 
 	try:
 		model_checkpoint = torch.load(model_path)
-		#print(model_checkpoint)
 		classifier.load_state_dict(model_checkpoint)
 
 	except:
@@ -289,8 +320,7 @@ def main():
 
 	try:
 		inv_checkpoint = torch.load(inversion_path)
-		#print(inv_checkpoint)
-		inversion.load_state_dict(inv_checkpoint['model'])
+		inversion.load_state_dict(inv_checkpoint)
 	except:
 		print("=> load classifier checkpoint '{}' failed".format(inversion_path))
 		return
