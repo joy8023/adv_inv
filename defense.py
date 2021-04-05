@@ -77,14 +77,15 @@ def perturb(prediction, epsilon, grad, logit_original, logit = True):
 	#new_label_onehot = F.one_hot(torch.tensor(new_label), 530)
 
 	# to keep the max unchanged
-	logit_new[orig_label_onehot] = torch.max(logit_new, 1)[0]*1.1
+	logit_new[orig_label_onehot] = torch.max(logit_new, 1)[0]*1.01
 
 
 	#new_label = torch.max(logit_new, 1)[1].cpu().numpy()
 
-	#accu = np.sum(original_label == new_label)/original_label.shape[0]
+	accu = np.sum(original_label == new_label)/original_label.shape[0]
 
 	output = F.softmax(logit_new, dim=1)
+	print(accu)
 	#output_diff = F.mse_loss(output, F.softmax(prediction, dim=1))
 	#print('************output_diff', output_diff.item())
 	if logit == True:
@@ -125,7 +126,7 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 			continue
 		'''
 		with torch.no_grad():
-			logit = classifier(data, release = False)
+			logit = classifier(data, logit = True)
 
 		for i in range(num_step):
 
@@ -205,8 +206,8 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 	#out = torch.cat((out, torch.tensor(after_noise)))
 	#vutils.save_image(out, 'out1/test_epsilon_{}.png'.format(epsilon), normalize=False)
 	'''
-	diff /= len(data_loader.dataset)*10
-	recon_err /= len(data_loader.dataset)*28*28
+	diff /= len(data_loader.dataset)*530
+	recon_err /= len(data_loader.dataset)*64*64
 	correct /= len(data_loader.dataset)
 	print('diff:', diff)
 	print('recon_err:', recon_err)
