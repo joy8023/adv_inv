@@ -13,7 +13,7 @@ import numpy as np
 # Training settings
 parser = argparse.ArgumentParser(description='Adversarial Model Inversion Demo')
 parser.add_argument('--batch-size', type=int, default=256, metavar='')
-parser.add_argument('--test-batch-size', type=int, default=1000, metavar='')
+parser.add_argument('--test-batch-size', type=int, default=500, metavar='')
 parser.add_argument('--epochs', type=int, default=20, metavar='')
 parser.add_argument('--lr', type=float, default=0.01, metavar='')
 parser.add_argument('--momentum', type=float, default=0.5, metavar='')
@@ -22,8 +22,8 @@ parser.add_argument('--seed', type=int, default=1, metavar='')
 parser.add_argument('--log-interval', type=int, default=10, metavar='')
 parser.add_argument('--c', type=float, default=50.)
 parser.add_argument('--num_workers', type=int, default=1, metavar='')
-parser.add_argument('--epsilon', type = float, default = 1e-2, metavar = '')
-parser.add_argument('--num_step', type = int, default = 5, metavar = '')
+parser.add_argument('--epsilon', type = float, default = 1e-3, metavar = '')
+parser.add_argument('--num_step', type = int, default = 3, metavar = '')
 
 
 def perturb(prediction, epsilon, grad, logit_original, logit = True):
@@ -82,7 +82,7 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 				logit = classifier(data, logit = True)
 		
 			#create new tensor for further perturbation
-			logit = logit.clone().detach().to(device)
+			#logit = logit.clone().detach().to(device)
 			logit.requires_grad = True
 
 			reconstruction = inversion(F.softmax(logit, dim=1))
@@ -95,7 +95,7 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 				original_logit = logit
 
 			perturbation = perturb(logit, epsilon, logit_grad, original_logit)
-			perturbation= perturbation.to(device)
+			#perturbation= perturbation.to(device)
 			pert_recon = inversion(F.softmax(perturbation, dim=1))
 
 			loss1 = F.mse_loss(pert_recon, data)
