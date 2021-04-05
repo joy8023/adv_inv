@@ -107,17 +107,24 @@ def main():
     #checkpoint = torch.load(path)
     try:
         checkpoint = torch.load(path)
-        print(checkpoint)
-        '''
-        classifier.load_state_dict(checkpoint['model'])
-        epoch = checkpoint['epoch']
-        best_cl_acc = checkpoint['best_cl_acc']
-        print("=> loaded classifier checkpoint '{}' (epoch {}, acc {:.4f})".format(path, epoch, best_cl_acc))
-        '''
         classifier.load_state_dict(checkpoint)
     except:
         print("=> load classifier checkpoint '{}' failed".format(path))
         return
+
+
+    # test use
+    inversion_path = 'model/inversion.pth'
+    try:
+        inv_checkpoint = torch.load(inversion_path)
+        inversion.load_state_dict(inv_checkpoint['model'])
+    except:
+        print("=> load classifier checkpoint '{}' failed".format(inversion_path))
+        return
+
+    test(classifier, inversion, device, test1_loader, 100, 'test1')
+
+    return
 
 
     # Train inversion model
