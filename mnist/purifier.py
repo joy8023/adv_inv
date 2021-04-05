@@ -162,7 +162,7 @@ def test(purifier, classifier, inversion, device, data_loader,msg ):
 	print('**********************')
 
 
-def mi_test(classifier, inversion, device, data_loader, msg ):
+def mi_test(classifier, classifier_mi, inversion, device, data_loader, msg ):
 
 	classifier.eval()
 	inversion.eval()
@@ -179,6 +179,8 @@ def mi_test(classifier, inversion, device, data_loader, msg ):
 			data, target = data.to(device), target.to(device)
 
 			logit = classifier(data, logit = True)
+			out = classifier_mi(data_loader,logit = True)
+
 			#_, out = purifier(logit)
 			pred = F.softmax(out, dim=1)
 			recon = inversion(pred)
@@ -249,6 +251,7 @@ def main():
 	#train_loader = torch.utils.data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True, **kwargs)
 	#test_loader = torch.utils.data.DataLoader(test_set, batch_size=args.test_batch_size, shuffle=False, **kwargs)
 	classifier = nn.DataParallel(Net()).to(device)
+	classifier_mi = nn.DataParallel(Net()).to(device)
 	inversion = nn.DataParallel(Inversion()).to(device)
 	#classifier = nn.DataParallel(Ne(nc=args.nc, ndf=args.ndf, nz=args.nz)).to(device)
 	#inversion = nn.DataParallel(Inversion(nc=args.nc, ngf=args.ngf, nz=args.nz, truncation=args.truncation, c=args.c)).to(device)
@@ -256,12 +259,8 @@ def main():
 
 	model_path = 'model/mnist_cnn.pth'
 	inversion_path = 'model/mnist_inv.pth'	
-	#lr = 0.01
-	#weight_decay = 1e-5
-
-	#optimizier = optim.Adam(purifier.parameters(), lr=lr, weight_decay=weight_decay)
 	optimizier = optim.Adam(purifier.parameters(), lr=0.02, betas=(0.5, 0.999), amsgrad=True)
-	'''
+	
 	try:
 		model_checkpoint = torch.load(model_path)
 		classifier.load_state_dict(model_checkpoint)
@@ -269,7 +268,7 @@ def main():
 	except:
 		print("=> load classifier checkpoint '{}' failed".format(model_path))
 		return
-	'''
+	
 	try:
 		inv_checkpoint = torch.load(inversion_path)
 		inversion.load_state_dict(inv_checkpoint)
@@ -292,11 +291,11 @@ def main():
 
 
 	#old_test(classifier, device, train_loader)
-	mi_test(classifier, inversion, device, test_loader,'qmnist')
-	mi_test(classifier, inversion, device, test2_loader,'mnist')
+	mi_test(classifier, classifier_mi, inversion, device, test_loader,'qmnist')
+	mi_test(classifier, classifier_mi, inversion, device, test2_loader,'mnist')
 
 	return
-	
+
 	test(purifier, classifier, inversion, device, test_loader,'qmnist')
 	test(purifier, classifier, inversion, device, test2_loader,'mnist')
 
