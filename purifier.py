@@ -71,26 +71,27 @@ def train(purifier, classifier, inversion, device, data_loader,optimizier, epoch
 
 		diff = F.l1_loss(logit, out)
 		recon_err = F.mse_loss(recon, data)
-		test_loss = F.nll_loss(F.log_softmax(out, dim = 1), target)
+		#test_loss = F.nll_loss(F.log_softmax(out, dim = 1), target)
 
 		#loss = (F.mse_loss(logit,out)
 		#	+ alpha * F.nll_loss(pred, target)
 		#	- beta * F.mse_loss(recon, data))
-		loss = a * diff - b * recon_err + c * test_loss 
+		loss = a * diff - b * recon_err
 
 		loss.backward()
 		optimizier.step()
-
+		'''
 		label1 = logit.argmax(dim=1, keepdim=True)
 		correct1 = label1.eq(target.view_as(label1)).sum().item()
 
 		label = out.argmax(dim=1, keepdim=True)
 		correct = label.eq(target.view_as(label)).sum().item()
+		'''
 
 		if batch_idx % 10 == 0:
 			print('Train Epoch: {} [{}/{}]\tLoss: {:.6f}'.format( epoch, batch_idx * len(data), len(data_loader.dataset), loss.item()))
 			print('diff:{:.6f}\trecon err:{:.6f}\ttest loss:{:.6f}'.format(diff.item(),recon_err.item(),test_loss.item()))
-			print(correct1, correct)
+			#print(correct1, correct)
 	print("epoch=", epoch, loss.data.float())
 
 def test(purifier, classifier, inversion, device, data_loader ):
