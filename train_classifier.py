@@ -41,7 +41,7 @@ def train_mi(mine, classifier, args, device, train_loader, optimizer, epoch):
         #temp = torch.cat()
         mi = mine.optimize(data.view(-1,64*64), output, 3, args.batch_size)
 
-        loss = F.nll_loss(output, target) + 1 * mi
+        loss = F.nll_loss(output, target) + 0.01 * mi
 
         loss.backward()
         optimizer.step()
@@ -146,7 +146,7 @@ def main():
 
         #train(classifier, args.log_interval, device, train_loader, optimizer, epoch)
         cl_acc = test(classifier, device, test_loader)
-
+        '''
         if cl_acc > best_cl_acc:
             best_cl_acc = cl_acc
             best_cl_epoch = epoch
@@ -157,7 +157,8 @@ def main():
                 'best_cl_acc': best_cl_acc,
             }
             #torch.save(state, 'model/classifier.pth')
-            torch.save(classifier.state_dict(), 'model/model_mi.pth')
+        '''
+        torch.save(classifier.state_dict(), 'model/model_mi.pth')
 
     print("Best classifier: epoch {}, acc {:.4f}".format(best_cl_epoch, best_cl_acc))
 
