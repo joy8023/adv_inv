@@ -9,11 +9,17 @@ import torch.nn.functional as F
 from data import FaceScrub
 from model import Classifier
 
+
+import urllib
+from mine.models.mine import Mine
+import mine.utils
+
+
 # Training settings
 parser = argparse.ArgumentParser(description='Adversarial Model Inversion Demo')
 parser.add_argument('--batch-size', type=int, default=128, metavar='')
 parser.add_argument('--test-batch-size', type=int, default=500, metavar='')
-parser.add_argument('--epochs', type=int, default=100, metavar='')
+parser.add_argument('--epochs', type=int, default=10, metavar='')
 parser.add_argument('--lr', type=float, default=0.01, metavar='')
 parser.add_argument('--momentum', type=float, default=0.5, metavar='')
 parser.add_argument('--no-cuda', action='store_true', default=False)
@@ -23,6 +29,27 @@ parser.add_argument('--nc', type=int, default=1)
 parser.add_argument('--ndf', type=int, default=128)
 parser.add_argument('--nz', type=int, default=530)
 parser.add_argument('--num_workers', type=int, default=1, metavar='')
+
+def train_mi(mine, classifier, args, device, train_loader, optimizer, epoch):
+    
+    classifier.train()
+    for batch_idx, (data, target) in enumerate(train_loader):
+        data, target = data.to(device), target.to(device)
+        optimizer.zero_grad()
+        output = model(data)
+        #iter = 10
+        #temp = torch.cat()
+        mi = mine.optimize(data.view(-1,64*64), output, 3, args.batch_size)
+
+        loss = F.nll_loss(output, target) + 1 * mi
+
+        loss.backward()
+        optimizer.step()
+        if batch_idx % args.log_interval == 0:
+            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                epoch, batch_idx * len(data), len(train_loader.dataset),
+                100. * batch_idx / len(train_loader), loss.item()))
+
 
 def train(classifier, log_interval, device, data_loader, optimizer, epoch):
     classifier.train()
@@ -89,9 +116,26 @@ def main():
     test(classifier,device,test_loader)
     return
     '''
+
+
+    #code for mutual info
+    statistics_network = nn.Sequential(
+                        nn.Linear(64*64 + 530, 1000),
+                        nn.ReLU(),
+                        nn.Linear(1000, 100),
+                        nn.ReLU(),
+                        nn.Linear(100, 1))
+
+
     # Train classifier
     for epoch in range(1, args.epochs + 1):
-        train(classifier, args.log_interval, device, train_loader, optimizer, epoch)
+
+        mine = Mine(T = statistics_network,
+                loss = 'mine', #mine_biased, fdiv
+                method = 'concat').to(device)
+        train_mi(mine, classifier, args, device, train_loader, optimizer, epoch)
+
+        #train(classifier, args.log_interval, device, train_loader, optimizer, epoch)
         cl_acc = test(classifier, device, test_loader)
 
         if cl_acc > best_cl_acc:
@@ -104,7 +148,7 @@ def main():
                 'best_cl_acc': best_cl_acc,
             }
             #torch.save(state, 'model/classifier.pth')
-            torch.save(classifier.state_dict(), 'model/model_dict.pth')
+            torch.save(classifier.state_dict(), 'model/model_mi.pth')
 
     print("Best classifier: epoch {}, acc {:.4f}".format(best_cl_epoch, best_cl_acc))
 
