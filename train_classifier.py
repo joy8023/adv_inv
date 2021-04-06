@@ -19,7 +19,7 @@ import mine.utils
 parser = argparse.ArgumentParser(description='Adversarial Model Inversion Demo')
 parser.add_argument('--batch-size', type=int, default=128, metavar='')
 parser.add_argument('--test-batch-size', type=int, default=500, metavar='')
-parser.add_argument('--epochs', type=int, default=10, metavar='')
+parser.add_argument('--epochs', type=int, default=2, metavar='')
 parser.add_argument('--lr', type=float, default=0.01, metavar='')
 parser.add_argument('--momentum', type=float, default=0.5, metavar='')
 parser.add_argument('--no-cuda', action='store_true', default=False)
@@ -36,7 +36,7 @@ def train_mi(mine, classifier, args, device, train_loader, optimizer, epoch):
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
-        output = model(data)
+        output = classifier(data)
         #iter = 10
         #temp = torch.cat()
         mi = mine.optimize(data.view(-1,64*64), output, 3, args.batch_size)
@@ -119,6 +119,15 @@ def main():
 
 
     #code for mutual info
+
+    path = 'model/model_dict.pth'
+    #checkpoint = torch.load(path)
+    try:
+        checkpoint = torch.load(path)
+        classifier.load_state_dict(checkpoint)
+    except:
+        print("=> load classifier checkpoint '{}' failed".format(path))
+        return
     statistics_network = nn.Sequential(
                         nn.Linear(64*64 + 530, 1000),
                         nn.ReLU(),
