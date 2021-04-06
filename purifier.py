@@ -55,16 +55,9 @@ def train(purifier, classifier, inversion, device, data_loader,optimizier, epoch
 	classifier.eval()
 	inversion.eval()
 
-	#batch_size = 128
-
-	alpha = 1
-	beta = 1
 	a = 1
 	b = 1
 	c = 1
-	#optimizier = optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
-	#l2norm = nn.MSELoss()
-
 
 	for batch_idx, (data, target) in enumerate(data_loader):
 		data, target = data.to(device), target.to(device)
@@ -76,7 +69,7 @@ def train(purifier, classifier, inversion, device, data_loader,optimizier, epoch
 		pred = F.softmax(out, dim=1)
 		recon = inversion(pred)
 
-		diff = F.mse_loss(logit, out)
+		diff = F.l1_loss(logit, out)
 		recon_err = F.mse_loss(recon, data)
 		test_loss = F.nll_loss(F.log_softmax(out, dim = 1), target)
 
@@ -121,7 +114,7 @@ def test(purifier, classifier, inversion, device, data_loader ):
 			_, out = purifier(logit)
 			pred = F.softmax(out, dim=1)
 			recon = inversion(pred)
-			diff += F.mse_loss(logit, out, reduction='sum').item()
+			diff += F.l1_loss(logit, out, reduction='sum').item()
 			recon_err += F.mse_loss(recon, data, reduction='sum').item()
 			test_loss += F.nll_loss(pred, target, reduction='sum').item()
 
@@ -171,7 +164,8 @@ def main():
 	transform = transforms.Compose([transforms.ToTensor()])
 
 
-	train_set = FaceScrub('./facescrub.npz', transform=transform, train=True)
+	#train_set = FaceScrub('./facescrub.npz', transform=transform, train=True)
+	train_set = CelebA('./celeba_5w_255.npy', transform=transform)
 	test_set = FaceScrub('./facescrub.npz', transform=transform, train=False)
 
 	train_loader = torch.utils.data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True, **kwargs)
@@ -183,11 +177,6 @@ def main():
 	model_path = 'model/model_dict.pth'
 	inversion_path = 'model/inv_model.pth'
 
-	
-	#lr = 0.01
-	#weight_decay = 1e-5
-
-	#optimizier = optim.Adam(purifier.parameters(), lr=lr, weight_decay=weight_decay)
 	optimizier = optim.Adam(purifier.parameters(), lr=0.0005, betas=(0.5, 0.999), amsgrad=True)
 
 	try:
@@ -231,10 +220,8 @@ def main():
 			torch.save(classifier.state_dict(), 'model/model_dict.pth')
 		'''
 		torch.save(purifier.state_dict(), 'model/purifier.pth')
-
 	
 	#print("Best classifier: epoch {}, acc {:.4f}".format(best_cl_epoch, best_cl_acc))
 	
-
 if __name__ == '__main__':
 	main()
