@@ -90,7 +90,7 @@ def train(purifier, classifier, inversion, device, data_loader,optimizier, epoch
 
 		if batch_idx % 10 == 0:
 			print('Train Epoch: {} [{}/{}]\tLoss: {:.6f}'.format( epoch, batch_idx * len(data), len(data_loader.dataset), loss.item()))
-			print('diff:{:.6f}\trecon err:{:.6f}\ttest loss:{:.6f}'.format(diff.item(),recon_err.item(),test_loss.item()))
+			print('diff:{:.6f}\trecon err:{:.6f}'.format(diff.item(),recon_err.item()))
 			#print(correct1, correct)
 	print("epoch=", epoch, loss.data.float())
 
@@ -137,8 +137,8 @@ def test(purifier, classifier, inversion, device, data_loader ):
 				plot = False
 
 
-	diff /= len(data_loader.dataset)
-	recon_err /= len(data_loader.dataset)
+	diff /= len(data_loader.dataset)*530
+	recon_err /= len(data_loader.dataset)*64*64
 	test_loss /= len(data_loader.dataset)
 	correct /= len(data_loader.dataset)
 	correct1 /= len(data_loader.dataset)
@@ -146,6 +146,62 @@ def test(purifier, classifier, inversion, device, data_loader ):
 	print('recon_err:', recon_err)
 	print('test_loss:', test_loss)
 	print('accu(original/purifier):',correct1, correct)
+	print('**********************')
+
+def mi_test(classifier, classifier_mi, inversion, device, data_loader, msg ):
+
+	classifier.eval()
+	inversion.eval()
+
+	diff = 0
+	recon_err = 0
+	test_loss = 0
+	correct = 0
+	plot = True
+	l1max = 0
+	with torch.no_grad():
+		for data, target in data_loader:
+			data, target = data.to(device), target.to(device)
+
+			logit = classifier(data, logit = True)
+			out = classifier_mi(data,logit = True)
+
+			#_, out = purifier(logit)
+			pred = F.softmax(out, dim=1)
+			recon = inversion(pred)
+
+			l1 = F.l1_loss(logit, out).max().item()
+			if l1>l1max:
+				l1max = l1
+
+
+			diff += F.l1_loss(logit, out, reduction='sum').item()
+			recon_err += F.mse_loss(recon, data, reduction='sum').item()
+			#test_loss += F.nll_loss(pred, target, reduction='sum').item()
+
+			label = out.max(1, keepdim=True)[1]
+			correct += label.eq(target.view_as(label)).sum().item()
+
+			if plot:
+				truth = data[0:32]
+				inverse = recon[0:32]
+				out = torch.cat((inverse, truth))
+				for i in range(4):
+					out[i * 16:i * 16 + 8] = inverse[i * 8:i * 8 + 8]
+					out[i * 16 + 8:i * 16 + 16] = truth[i * 8:i * 8 + 8]
+				vutils.save_image(out, 'out/recon_mi_{}.png'.format(msg.replace(" ", "")), normalize=False)
+				plot = False
+
+
+	diff /= len(data_loader.dataset)*530
+	recon_err /= len(data_loader.dataset)*64*64
+	#test_loss /= len(data_loader.dataset)
+	correct /= len(data_loader.dataset)
+	print('diff:', diff)
+	print('recon_err:', recon_err)
+	#print('test_loss:', test_loss)
+	print('accu:',correct)
+	print('l1max:',l1max)
 	print('**********************')
 
 
@@ -202,6 +258,23 @@ def main():
 	#purifier.load_state_dict(torch.load( 'model/purifier.pth'))
 	#test(purifier, classifier, inversion, device, test_loader )
 	#return
+
+	#mi model test
+	mi_path = 'model/model_mi.pth'
+	try:
+		checkpoint = torch.load(mi_path)
+		classifier_mi.load_state_dict(checkpoint)
+	except:
+		print("=> load classifier checkpoint '{}' failed".format(path))
+		return
+
+
+	#old_test(classifier, device, train_loader)
+	mi_test(classifier, classifier_mi, inversion, device, test_loader,'mi')
+	#old_test(classifier_mi, device,test_loader)
+	#mi_test(classifier, classifier_mi, inversion, device, test2_loader,'mnist')
+
+	return
 
 	for epoch in range(1, args.epochs + 1):
 		train(purifier, classifier, inversion, device, train_loader,optimizier, epoch)
