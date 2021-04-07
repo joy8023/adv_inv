@@ -103,7 +103,7 @@ def main():
 
     # Load classifier
     #path = 'out/classifier.pth'
-    path = 'model/model_dict.pth'
+    path = 'model/model_mi.pth'
     #checkpoint = torch.load(path)
     try:
         checkpoint = torch.load(path)
@@ -114,15 +114,15 @@ def main():
 
 
     # test use
-    inversion_path = 'model/inversion.pth'
+    inversion_path = 'model/inv_model.pth'
     try:
         inv_checkpoint = torch.load(inversion_path)
-        inversion.load_state_dict(inv_checkpoint['model'])
+        inversion.load_state_dict(inv_checkpoint)
     except:
         print("=> load classifier checkpoint '{}' failed".format(inversion_path))
         return
 
-    test(classifier, inversion, device, test1_loader, 100, 'test1')
+    test(classifier, inversion, device, test1_loader, 100, 'mi')
 
     return
 
