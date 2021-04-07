@@ -229,6 +229,7 @@ def main():
 	test_loader = torch.utils.data.DataLoader(test_set, batch_size=args.test_batch_size, shuffle=False, **kwargs)
 
 	classifier = nn.DataParallel(Classifier(nc=args.nc, ndf=args.ndf, nz=args.nz)).to(device)
+	classifier_mi = nn.DataParallel(Classifier(nc=args.nc, ndf=args.ndf, nz=args.nz)).to(device)
 	inversion = nn.DataParallel(Inversion(nc=args.nc, ngf=args.ngf, nz=args.nz, truncation=args.truncation, c=args.c)).to(device)
 	purifier = nn.DataParallel(Purifier()).to(device)
 	model_path = 'model/model_dict.pth'
@@ -265,7 +266,7 @@ def main():
 		checkpoint = torch.load(mi_path)
 		classifier_mi.load_state_dict(checkpoint)
 	except:
-		print("=> load classifier checkpoint '{}' failed".format(path))
+		print("=> load classifier checkpoint '{}' failed".format(mi_path))
 		return
 
 
