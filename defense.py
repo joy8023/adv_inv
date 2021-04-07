@@ -13,7 +13,7 @@ import numpy as np
 
 parser = argparse.ArgumentParser(description='defense against model inversion')
 parser.add_argument('--celeb-batch-size', type=int, default=128, metavar='')
-parser.add_argument('--face-batch-size', type=int, default=64, metavar='')
+parser.add_argument('--face-batch-size', type=int, default=128, metavar='')
 parser.add_argument('--nc', type=int, default=1)
 parser.add_argument('--ndf', type=int, default=128)
 parser.add_argument('--ngf', type=int, default=128)
@@ -23,8 +23,8 @@ parser.add_argument('--c', type=float, default=50.)
 parser.add_argument('--num_workers', type=int, default=1, metavar='')
 parser.add_argument('--no-cuda', action='store_true', default=False)
 parser.add_argument('--seed', type=int, default=1, metavar='')
-parser.add_argument('--epsilon', type = float, default = 0.1, metavar = '')
-parser.add_argument('--num_step', type = int, default = 5, metavar = '')
+parser.add_argument('--epsilon', type = float, default = 0.5, metavar = '')
+parser.add_argument('--num_step', type = int, default = 10, metavar = '')
 
 
 def predict(classifier, device, data_loader):
@@ -85,7 +85,7 @@ def perturb(prediction, epsilon, grad, logit_original, logit = True):
 	accu = np.sum(original_label == new_label)/original_label.shape[0]
 
 	output = F.softmax(logit_new, dim=1)
-	print(accu)
+	#print(accu)
 	#output_diff = F.mse_loss(output, F.softmax(prediction, dim=1))
 	#print('************output_diff', output_diff.item())
 	if logit == True:
@@ -329,7 +329,7 @@ def main():
 	epsilon = args.epsilon
 	num_step = args.num_step
 	
-	add_noise(classifier, inversion, device, celeb_loader, epsilon, num_step)
+	add_noise(classifier, inversion, device, face_loader, epsilon, num_step)
 	#inv_test2(inversion, device, face_loader)
 	#inv_test(classifier, inversion, device, face_loader)
 
