@@ -137,7 +137,7 @@ def test(inversion, device, data_loader, epoch, msg):
             data, out = data.to(device), out.to(device)
 
             #prediction = classifier(data, release=True)
-            reconstruction = inversion(out)
+            reconstruction = inversion(F.softmax(out, dim=1))
             mse_loss += F.mse_loss(reconstruction, data, reduction='sum').item()
 
             if plot:
@@ -169,22 +169,22 @@ def main():
 
     transform = transforms.Compose([transforms.ToTensor()])
     train_set = CelebA_out('./celeba_def.npz', transform=transform)
-    #train_set = CelebA('./celeba_5w_255.npy', transform=transform)
+    #train_set = CelebA('./celeba_5w_255.nvpy', transform=transform)
     # Inversion attack on TRAIN data of facescrub classifier
     test1_set = FaceScrub_out('./face_def.npz', transform=transform, train=False)
     # Inversion attack on TEST data of facescrub classifier
-    #test2_set = FaceScrub('./facescrub.npz', transform=transform, train=False)
+    test2_set = FaceScrub('./facescrub.npz', transform=transform, train=False)
 
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True, **kwargs)
     test1_loader = torch.utils.data.DataLoader(test1_set, batch_size=args.test_batch_size, shuffle=False, **kwargs)
-    #test2_loader = torch.utils.data.DataLoader(test2_set, batch_size=args.test_batch_size, shuffle=False, **kwargs)
+    test2_loader = torch.utils.data.DataLoader(test2_set, batch_size=args.test_batch_size, shuffle=False, **kwargs)
 
     #classifier = nn.DataParallel(Classifier(nc=args.nc, ndf=args.ndf, nz=args.nz)).to(device)
     inversion = nn.DataParallel(Inversion(nc=args.nc, ngf=args.ngf, nz=args.nz, truncation=args.truncation, c=args.c)).to(device)
     optimizer = optim.Adam(inversion.parameters(), lr=0.0002, betas=(0.5, 0.999), amsgrad=True)
 
     # Load classifier
-    path = 'model/inv_model.pth'
+    path = 'model/inv_def.pth'
     
     try:
         checkpoint = torch.load(path)
@@ -195,6 +195,8 @@ def main():
         return
     
 
+    test(inversion, device, test2_loader, 1, 'test2')
+    return
 
     # Train inversion model
     best_recon_loss = 999
