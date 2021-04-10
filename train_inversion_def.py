@@ -115,9 +115,7 @@ def train( inversion, log_interval, device, data_loader, optimizer, epoch):
             prediction = classifier(data, release=True)
         '''
         
-        reconstruction = inversion(out)
-        print(reconstruction.item())
-        print(data.item())
+        reconstruction = inversion(F.softmax(out, dim=1))
         loss = F.mse_loss(reconstruction, data)
         loss.backward()
         optimizer.step()
@@ -173,12 +171,12 @@ def main():
     train_set = CelebA_out('./celeba_def.npz', transform=transform)
     #train_set = CelebA('./celeba_5w_255.npy', transform=transform)
     # Inversion attack on TRAIN data of facescrub classifier
-    #test1_set = FaceScrub_out('./face_def.npz', transform=transform, train=False)
+    test1_set = FaceScrub_out('./face_def.npz', transform=transform, train=False)
     # Inversion attack on TEST data of facescrub classifier
     #test2_set = FaceScrub('./facescrub.npz', transform=transform, train=False)
 
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True, **kwargs)
-    #test1_loader = torch.utils.data.DataLoader(test1_set, batch_size=args.test_batch_size, shuffle=False, **kwargs)
+    test1_loader = torch.utils.data.DataLoader(test1_set, batch_size=args.test_batch_size, shuffle=False, **kwargs)
     #test2_loader = torch.utils.data.DataLoader(test2_set, batch_size=args.test_batch_size, shuffle=False, **kwargs)
 
     #classifier = nn.DataParallel(Classifier(nc=args.nc, ndf=args.ndf, nz=args.nz)).to(device)
@@ -202,7 +200,7 @@ def main():
     best_recon_loss = 999
     for epoch in range(1, args.epochs + 1):
         train(inversion, args.log_interval, device, train_loader, optimizer, epoch)
-        #recon_loss = test( inversion, device, test1_loader, epoch, 'test1')
+        recon_loss = test( inversion, device, test1_loader, epoch, 'test1')
         #test(classifier, inversion, device, test2_loader, epoch, 'test2')
 
         if recon_loss < best_recon_loss:
@@ -213,9 +211,9 @@ def main():
                 'optimizer': optimizer.state_dict(),
                 'best_recon_loss': best_recon_loss
             }
-            torch.save(state, 'model/inversion_def.pth')
-            #torch.save(inversion.state_dict(), 'model/inv_model_def_dict.pth')
-            #shutil.copyfile('out/recon_test1_def{}.png'.format(epoch), 'out/best_test1_def.png')
+            #torch.save(state, 'model/inversion_def.pth')
+            torch.save(inversion.state_dict(), 'model/inv_def.pth')
+            shutil.copyfile('out/recon_test1_def{}.png'.format(epoch), 'out/best_test1_def.png')
             #shutil.copyfile('out/recon_test2_{}.png'.format(epoch), 'out/best_test2.png')
 
 if __name__ == '__main__':
