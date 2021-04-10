@@ -116,6 +116,8 @@ def train( inversion, log_interval, device, data_loader, optimizer, epoch):
         '''
         
         reconstruction = inversion(out)
+        print(reconstruction.item())
+        print(data.item())
         loss = F.mse_loss(reconstruction, data)
         loss.backward()
         optimizer.step()
