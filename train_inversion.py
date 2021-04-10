@@ -14,7 +14,7 @@ import torchvision.utils as vutils
 parser = argparse.ArgumentParser(description='Adversarial Model Inversion Demo')
 parser.add_argument('--batch-size', type=int, default=128, metavar='')
 parser.add_argument('--test-batch-size', type=int, default=500, metavar='')
-parser.add_argument('--epochs', type=int, default=100, metavar='')
+parser.add_argument('--epochs', type=int, default=50, metavar='')
 parser.add_argument('--lr', type=float, default=0.01, metavar='')
 parser.add_argument('--momentum', type=float, default=0.5, metavar='')
 parser.add_argument('--no-cuda', action='store_true', default=False)
@@ -22,7 +22,7 @@ parser.add_argument('--seed', type=int, default=1, metavar='')
 parser.add_argument('--log-interval', type=int, default=10, metavar='')
 parser.add_argument('--nc', type=int, default=1)
 parser.add_argument('--ndf', type=int, default=128)
-parser.add_argument('--ngf', type=int, default=128)
+parser.add_argument('--ngf', type=int, default=64)
 parser.add_argument('--nz', type=int, default=530)
 parser.add_argument('--truncation', type=int, default=530)
 parser.add_argument('--c', type=float, default=50.)
@@ -102,7 +102,7 @@ def main():
     optimizer = optim.Adam(inversion.parameters(), lr=0.0002, betas=(0.5, 0.999), amsgrad=True)
 
     # Load classifier
-    path = 'out/classifier.pth'
+    path = 'model/model_dict.pth'
     #path = 'model/model_mi.pth'
     try:
         checkpoint = torch.load(path)
@@ -111,7 +111,7 @@ def main():
         print("=> load classifier checkpoint '{}' failed".format(path))
         return
 
-
+    '''
     # test use
     inversion_path = 'model/inv_def.pth'
     try:
@@ -124,7 +124,7 @@ def main():
     test(classifier, inversion, device, test1_loader, 1, 'inv_def')
 
     return
-
+    '''
 
     # Train inversion model
     best_recon_loss = 999
@@ -142,7 +142,7 @@ def main():
                 'best_recon_loss': best_recon_loss
             }
             #torch.save(state, 'model/inversion.pth')
-            torch.save(inversion.state_dict(), 'model/inv_model.pth')
+            torch.save(inversion.state_dict(), 'model/inv_model_64.pth')
             shutil.copyfile('out/recon_test1_{}.png'.format(epoch), 'out/best_test1.png')
             #shutil.copyfile('out/recon_test2_{}.png'.format(epoch), 'out/best_test2.png')
 
