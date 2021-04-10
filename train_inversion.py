@@ -102,9 +102,8 @@ def main():
     optimizer = optim.Adam(inversion.parameters(), lr=0.0002, betas=(0.5, 0.999), amsgrad=True)
 
     # Load classifier
-    #path = 'out/classifier.pth'
-    path = 'model/model_mi.pth'
-    #checkpoint = torch.load(path)
+    path = 'out/classifier.pth'
+    #path = 'model/model_mi.pth'
     try:
         checkpoint = torch.load(path)
         classifier.load_state_dict(checkpoint)
@@ -114,7 +113,7 @@ def main():
 
 
     # test use
-    inversion_path = 'model/inv_model.pth'
+    inversion_path = 'model/inv_def.pth'
     try:
         inv_checkpoint = torch.load(inversion_path)
         inversion.load_state_dict(inv_checkpoint)
@@ -122,7 +121,7 @@ def main():
         print("=> load classifier checkpoint '{}' failed".format(inversion_path))
         return
 
-    test(classifier, inversion, device, test1_loader, 100, 'mi')
+    test(classifier, inversion, device, test1_loader, 1, 'inv_def')
 
     return
 
