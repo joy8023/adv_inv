@@ -23,7 +23,7 @@ parser.add_argument('--c', type=float, default=50.)
 parser.add_argument('--num_workers', type=int, default=1, metavar='')
 parser.add_argument('--no-cuda', action='store_true', default=False)
 parser.add_argument('--seed', type=int, default=1, metavar='')
-parser.add_argument('--epsilon', type = float, default = 0.5, metavar = '')
+parser.add_argument('--epsilon', type = float, default = 0.4, metavar = '')
 parser.add_argument('--num_step', type = int, default = 10, metavar = '')
 
 
@@ -62,25 +62,11 @@ def perturb(prediction, epsilon, grad, logit_original, logit = True):
 	original_label = torch.max(logit_original, 1)[1].cpu().numpy()
 	new_label = torch.max(logit_new, 1)[1].cpu().numpy()
 
-	'''
-	#to use the restore function to replace the max one by one
-	for i in range(64):
-		logit_new[i] = restore(logit_new[i],new_label[i], logit_original[i], original_label[i])
-
-	'''
-
-	#print(logit_original.size())
 	orig_label_onehot = F.one_hot(torch.tensor(original_label), 530)
-	#print(orig_label_onehot)
 	orig_label_onehot = torch.tensor(orig_label_onehot, dtype=torch.uint8)
-	#print(orig_label_onehot.size())
-	#new_label_onehot = F.one_hot(torch.tensor(new_label), 530)
 
 	# to keep the max unchanged
 	logit_new[orig_label_onehot] = torch.max(logit_new, 1)[0]*1.01
-
-
-	#new_label = torch.max(logit_new, 1)[1].cpu().numpy()
 
 	accu = np.sum(original_label == new_label)/original_label.shape[0]
 
@@ -92,7 +78,6 @@ def perturb(prediction, epsilon, grad, logit_original, logit = True):
 		return logit_new
 	else:
 		return output
-
 
 #main outer function
 def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
@@ -114,17 +99,7 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 		data_ = data_.to(device)
 		target_ = target_.to(device)
 		print('############batch:',batch_idx)
-		'''
-		if batch_idx%2 == 1:
-			with torch.no_grad():
-				pred = classifier(data, release = True)
 
-
-			img = torch.cat((img,data_))
-			result = torch.cat((result,pred))
-			print("no defense batch")
-			continue
-		'''
 		with torch.no_grad():
 			logit = classifier(data, logit = True)
 
@@ -162,7 +137,10 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 			out = out = torch.cat((out, pert_recon[0:8]))
 			'''
 			#data = pert_recon.clone().detach().to(device)
+
+
 		# test defense use
+		'''
 		l1 = F.l1_loss(original_logit, perturbation).max().item()
 		if l1>l1max:
 			l1max = l1
@@ -186,25 +164,19 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 		if batch_idx == 0:
 			img = data_
 			result = perturbation
+		else:
 
-		img = torch.cat((img,data_))
-		result = torch.cat((result,perturbation))
-		print("defense batch")
-		'''
+			img = torch.cat((img,data_))
+			result = torch.cat((result,perturbation))
 
-		#only do the first batch
-		#break
-	'''
 	img = img.cpu().numpy()
 	result = result.detach().cpu().numpy()
 	print(img.shape)
 	print(result.shape)
 
 	#generating dataset
-	np.savez("celeba_def_rdm.npz", images = img, out = result)
+	np.savez("celeba_def.npz", images = img, out = result)
 	
-	#out = torch.cat((out, torch.tensor(after_noise)))
-	#vutils.save_image(out, 'out1/test_epsilon_{}.png'.format(epsilon), normalize=False)
 	'''
 	diff /= len(data_loader.dataset)*530
 	recon_err /= len(data_loader.dataset)*64*64
@@ -214,6 +186,7 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 	print('accu:',correct)
 	print('l1max:',l1max)
 	print('**********************')
+	'''
 
 	return
 
@@ -310,7 +283,6 @@ def main():
 	inversion_path = 'model/inv_model.pth'
 	#inversion_path = 'out/inversion_def.pth'
 
-
 	try:
 		model_checkpoint = torch.load(model_path)
 		classifier.load_state_dict(model_checkpoint)
@@ -329,7 +301,7 @@ def main():
 	epsilon = args.epsilon
 	num_step = args.num_step
 	
-	add_noise(classifier, inversion, device, face_loader, epsilon, num_step)
+	add_noise(classifier, inversion, device, celeb_loader, epsilon, num_step)
 	#inv_test2(inversion, device, face_loader)
 	#inv_test(classifier, inversion, device, face_loader)
 
