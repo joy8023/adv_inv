@@ -14,7 +14,7 @@ import torchvision.utils as vutils
 parser = argparse.ArgumentParser(description='Adversarial Model Inversion Demo')
 parser.add_argument('--batch-size', type=int, default=128, metavar='')
 parser.add_argument('--test-batch-size', type=int, default=500, metavar='')
-parser.add_argument('--epochs', type=int, default=50, metavar='')
+parser.add_argument('--epochs', type=int, default=20, metavar='')
 parser.add_argument('--lr', type=float, default=0.01, metavar='')
 parser.add_argument('--momentum', type=float, default=0.5, metavar='')
 parser.add_argument('--no-cuda', action='store_true', default=False)
@@ -27,6 +27,80 @@ parser.add_argument('--nz', type=int, default=530)
 parser.add_argument('--truncation', type=int, default=530)
 parser.add_argument('--c', type=float, default=50.)
 parser.add_argument('--num_workers', type=int, default=1, metavar='')
+
+
+def perturb(prediction, epsilon, grad, logit_original):
+
+    sign = grad.sign()
+    logit_new = prediction + epsilon * sign 
+    
+    logit_diff = F.mse_loss(logit_new, logit_original)
+    #print('*************logit_diff:',logit_diff.item())
+
+    #calculate accuracy for perturbed images
+    original_label = torch.max(logit_original, 1)[1].cpu().numpy()
+    new_label = torch.max(logit_new, 1)[1].cpu().numpy()
+
+
+    orig_label_onehot = F.one_hot(torch.tensor(original_label), 530)
+    orig_label_onehot = torch.tensor(orig_label_onehot, dtype=torch.uint8)
+
+    # to keep the max unchanged
+    logit_new[orig_label_onehot] = torch.max(logit_new, 1)[0]*1.1
+
+    new_label = torch.max(logit_new, 1)[1].cpu().numpy()
+
+    accu = np.sum(original_label == new_label)/original_label.shape[0]
+
+    output = F.softmax(logit_new, dim=1)
+    output_diff = F.mse_loss(output, F.softmax(prediction, dim=1))
+    #print('************output_diff', output_diff.item())
+
+    return output
+
+#main outer function
+def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
+
+    classifier.eval()
+    inversion.eval()
+
+    for batch_idx, (data_, target_) in enumerate(data_loader):
+
+        data = data_.to(device)
+        print('############batch:',batch_idx)
+
+
+        for i in range(num_step):
+
+            #print('========perturbation iteration:',i)
+
+            with torch.no_grad():
+                logit = classifier(data, release = False)
+        
+            #create new tensor for further perturbation
+            logit = logit.clone().detach().to(device)
+            logit.requires_grad = True
+
+            reconstruction = inversion(F.softmax(logit, dim=1))
+            loss =F.mse_loss(reconstruction, data)
+            loss.backward()
+
+            logit_grad = logit.grad.data
+
+            if i == 0:
+                original_logit = logit
+
+            perturbation = perturb(logit, epsilon, logit_grad, original_logit)
+            perturbation= perturbation.to(device)
+            pert_recon = inversion(perturbation)
+
+            #data = pert_recon.clone().detach().to(device)
+
+
+        #only do the first batch
+        #break
+
+    return
 
 def train( inversion, log_interval, device, data_loader, optimizer, epoch):
     #classifier.eval()
@@ -97,12 +171,12 @@ def main():
     train_set = CelebA_out('./celeba_def.npz', transform=transform)
     #train_set = CelebA('./celeba_5w_255.npy', transform=transform)
     # Inversion attack on TRAIN data of facescrub classifier
-    test1_set = FaceScrub_out('./face_def.npz', transform=transform, train=False)
+    #test1_set = FaceScrub_out('./face_def.npz', transform=transform, train=False)
     # Inversion attack on TEST data of facescrub classifier
     #test2_set = FaceScrub('./facescrub.npz', transform=transform, train=False)
 
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True, **kwargs)
-    test1_loader = torch.utils.data.DataLoader(test1_set, batch_size=args.test_batch_size, shuffle=False, **kwargs)
+    #test1_loader = torch.utils.data.DataLoader(test1_set, batch_size=args.test_batch_size, shuffle=False, **kwargs)
     #test2_loader = torch.utils.data.DataLoader(test2_set, batch_size=args.test_batch_size, shuffle=False, **kwargs)
 
     #classifier = nn.DataParallel(Classifier(nc=args.nc, ndf=args.ndf, nz=args.nz)).to(device)
@@ -110,24 +184,23 @@ def main():
     optimizer = optim.Adam(inversion.parameters(), lr=0.0002, betas=(0.5, 0.999), amsgrad=True)
 
     # Load classifier
-    #path = 'out/classifier.pth'
-    path = 'model/model_dict.pth'
-    '''
+    path = 'model/inv_model.pth'
+    
     try:
         checkpoint = torch.load(path)
-        print(checkpoint)
-        classifier.load_state_dict(checkpoint)
+        #print(checkpoint)
+        inversion.load_state_dict(checkpoint)
     except:
         print("=> load classifier checkpoint '{}' failed".format(path))
         return
-    '''
+    
 
 
     # Train inversion model
     best_recon_loss = 999
     for epoch in range(1, args.epochs + 1):
         train(inversion, args.log_interval, device, train_loader, optimizer, epoch)
-        recon_loss = test( inversion, device, test1_loader, epoch, 'test1')
+        #recon_loss = test( inversion, device, test1_loader, epoch, 'test1')
         #test(classifier, inversion, device, test2_loader, epoch, 'test2')
 
         if recon_loss < best_recon_loss:
@@ -140,7 +213,7 @@ def main():
             }
             torch.save(state, 'model/inversion_def.pth')
             #torch.save(inversion.state_dict(), 'model/inv_model_def_dict.pth')
-            shutil.copyfile('out/recon_test1_def{}.png'.format(epoch), 'out/best_test1_def.png')
+            #shutil.copyfile('out/recon_test1_def{}.png'.format(epoch), 'out/best_test1_def.png')
             #shutil.copyfile('out/recon_test2_{}.png'.format(epoch), 'out/best_test2.png')
 
 if __name__ == '__main__':
