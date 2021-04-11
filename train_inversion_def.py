@@ -184,7 +184,7 @@ def main():
     optimizer = optim.Adam(inversion.parameters(), lr=0.0002, betas=(0.5, 0.999), amsgrad=True)
 
     # Load classifier
-    path = 'model/inv_def.pth'
+    path = 'model/inv_model_64.pth'
     
     try:
         checkpoint = torch.load(path)
@@ -195,7 +195,7 @@ def main():
         return
     
 
-    test(inversion, device, test2_loader, 1, 'test2')
+    test(inversion, device, test1_loader, 1, 'tran')
     return
 
     # Train inversion model
