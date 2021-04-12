@@ -23,7 +23,7 @@ parser.add_argument('--c', type=float, default=50.)
 parser.add_argument('--num_workers', type=int, default=1, metavar='')
 parser.add_argument('--no-cuda', action='store_true', default=False)
 parser.add_argument('--seed', type=int, default=1, metavar='')
-parser.add_argument('--epsilon', type = float, default = 0.5, metavar = '')
+parser.add_argument('--epsilon', type = float, default = 0.4, metavar = '')
 parser.add_argument('--num_step', type = int, default = 10, metavar = '')
 
 
@@ -140,7 +140,7 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 
 
 		# test defense use
-		
+		'''
 		l1 = F.l1_loss(original_logit, perturbation).max().item()
 		if l1>l1max:
 			l1max = l1
@@ -159,7 +159,7 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 				out[i * 16 + 8:i * 16 + 16] = truth[i * 8:i * 8 + 8]
 			vutils.save_image(out, 'out/recon_def_adv.png', normalize=False)
 			plot = False
-	'''
+		'''
 		#to save img and their result
 		if batch_idx == 0:
 			img = data_
@@ -175,7 +175,7 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 	print(result.shape)
 
 	#generating dataset
-	np.savez("celeba_def.npz", images = img, out = result)
+	np.savez("celeba_def1.npz", images = img, out = result)
 	
 	'''
 	diff /= len(data_loader.dataset)*530
@@ -186,6 +186,7 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 	print('accu:',correct)
 	print('l1max:',l1max)
 	print('**********************')
+	'''
 	
 
 	return
@@ -390,8 +391,8 @@ def main():
 	epsilon = args.epsilon
 	num_step = args.num_step
 	
-	#add_noise(classifier, inversion, device, celeb_loader, epsilon, num_step)
-	add_noise_2inv(classifier, inversion, inversion2, device, face_loader, epsilon, num_step)
+	add_noise(classifier, inversion, device, celeb_loader, epsilon, num_step)
+	#add_noise_2inv(classifier, inversion, inversion2, device, face_loader, epsilon, num_step)
 	#inv_test2(inversion, device, face_loader)
 	#inv_test(classifier, inversion, device, face_loader)
 
