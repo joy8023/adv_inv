@@ -140,7 +140,7 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 
 
 		# test defense use
-		'''
+		
 		l1 = F.l1_loss(original_logit, perturbation).max().item()
 		if l1>l1max:
 			l1max = l1
@@ -157,9 +157,9 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 			for i in range(4):
 				out[i * 16:i * 16 + 8] = inverse[i * 8:i * 8 + 8]
 				out[i * 16 + 8:i * 16 + 16] = truth[i * 8:i * 8 + 8]
-			vutils.save_image(out, 'out/recon_def.png', normalize=False)
+			vutils.save_image(out, 'out/recon_def_adv.png', normalize=False)
 			plot = False
-		'''
+	'''
 		#to save img and their result
 		if batch_idx == 0:
 			img = data_
@@ -186,7 +186,7 @@ def add_noise(classifier, inversion, device, data_loader, epsilon, num_step):
 	print('accu:',correct)
 	print('l1max:',l1max)
 	print('**********************')
-	'''
+	
 
 	return
 
@@ -280,7 +280,7 @@ def main():
 	inversion = nn.DataParallel(Inversion(nc=args.nc, ngf=args.ngf, nz=args.nz, truncation=args.truncation, c=args.c)).to(device)
 
 	model_path = 'model/model_dict.pth'
-	inversion_path = 'model/inv_model.pth'
+	inversion_path = 'model/inv_def.pth'
 	#inversion_path = 'out/inversion_def.pth'
 
 	try:
