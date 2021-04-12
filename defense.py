@@ -363,7 +363,7 @@ def main():
 
 	model_path = 'model/model_dict.pth'
 	inversion_path = 'model/inv_model.pth'
-	inversion2_path = 'out/inv_def.pth'
+	inversion2_path = 'model/inv_def.pth'
 
 	try:
 		model_checkpoint = torch.load(model_path)
@@ -373,8 +373,8 @@ def main():
 		print("=> load classifier checkpoint '{}' failed".format(model_path))
 		return
 	try:
-		model_checkpoint = torch.load(inversion2_path)
-		inversion2.load_state_dict(model_checkpoint)
+		checkpoint = torch.load(inversion2_path)
+		inversion2.load_state_dict(checkpoint)
 
 	except:
 		print("=> load classifier checkpoint '{}' failed".format(model_path))
