@@ -168,7 +168,7 @@ def main():
     torch.manual_seed(args.seed)
 
     transform = transforms.Compose([transforms.ToTensor()])
-    train_set = CelebA_out('./celeba_def.npz', transform=transform)
+    train_set = CelebA_out('./celeba_def1.npz', transform=transform)
     #train_set = CelebA('./celeba_5w_255.nvpy', transform=transform)
     # Inversion attack on TRAIN data of facescrub classifier
     test1_set = FaceScrub_out('./face_def.npz', transform=transform, train=False)
@@ -184,7 +184,7 @@ def main():
     optimizer = optim.Adam(inversion.parameters(), lr=0.0002, betas=(0.5, 0.999), amsgrad=True)
 
     # Load classifier
-    path = 'model/inv_model_64.pth'
+    path = 'model/inv_model.pth'
     
     try:
         checkpoint = torch.load(path)
@@ -195,8 +195,8 @@ def main():
         return
     
 
-    test(inversion, device, test1_loader, 1, 'tran')
-    return
+    #test(inversion, device, test1_loader, 1, 'tran')
+    #return
 
     # Train inversion model
     best_recon_loss = 999
