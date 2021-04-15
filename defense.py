@@ -246,8 +246,8 @@ def add_noise_2inv(classifier, inversion, inversion2, device, data_loader, epsil
 
 		diff += F.l1_loss(original_logit, perturbation, reduction='sum').item()
 		recon_err += F.mse_loss(pert_recon, data_, reduction='sum').item()
-		label = perturbation.max(1, keepdim=True)[1]
-		correct += label.eq(target_.view_as(label)).sum().item()
+		#label = perturbation.max(1, keepdim=True)[1]
+		#correct += label.eq(target_.view_as(label)).sum().item()
 
 		if plot:
 			truth = data_[0:32]
@@ -261,10 +261,10 @@ def add_noise_2inv(classifier, inversion, inversion2, device, data_loader, epsil
 
 	diff /= len(data_loader.dataset)*530
 	recon_err /= len(data_loader.dataset)*64*64
-	correct /= len(data_loader.dataset)
+	#correct /= len(data_loader.dataset)
 	print('diff:', diff)
 	print('recon_err:', recon_err)
-	print('accu:',correct)
+	#print('accu:',correct)
 	print('l1max:',l1max)
 	print('**********************')
 	
@@ -353,7 +353,7 @@ def main():
 	face_set = FaceScrub('./facescrub.npz', transform=transform, train=False)
 
 	#celeb_set = CelebA('./celeba_5w_255.npy', transform=transform)
-	face_set = FaceScrub_out('./face_out.npz', transform=transform, train=False)
+	face_set = FaceScrub_out('./face_def.npz', transform=transform, train=False)
 
 	celeb_loader = torch.utils.data.DataLoader(celeb_set, batch_size=args.celeb_batch_size, shuffle=True, **kwargs)
 	face_loader = torch.utils.data.DataLoader(face_set, batch_size=args.face_batch_size, shuffle=False, **kwargs)
