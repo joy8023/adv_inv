@@ -353,7 +353,7 @@ def main():
 	face_set = FaceScrub('./facescrub.npz', transform=transform, train=False)
 
 	#celeb_set = CelebA('./celeba_5w_255.npy', transform=transform)
-	#face_set = FaceScrub_out('./face_out.npz', transform=transform, train=False)
+	face_set = FaceScrub_out('./face_out.npz', transform=transform, train=False)
 
 	celeb_loader = torch.utils.data.DataLoader(celeb_set, batch_size=args.celeb_batch_size, shuffle=True, **kwargs)
 	face_loader = torch.utils.data.DataLoader(face_set, batch_size=args.face_batch_size, shuffle=False, **kwargs)
@@ -391,8 +391,8 @@ def main():
 	epsilon = args.epsilon
 	num_step = args.num_step
 	
-	add_noise(classifier, inversion, device, celeb_loader, epsilon, num_step)
-	#add_noise_2inv(classifier, inversion, inversion2, device, face_loader, epsilon, num_step)
+	#add_noise(classifier, inversion, device, celeb_loader, epsilon, num_step)
+	add_noise_2inv(classifier, inversion, inversion2, device, face_loader, epsilon, num_step)
 	#inv_test2(inversion, device, face_loader)
 	#inv_test(classifier, inversion, device, face_loader)
 
